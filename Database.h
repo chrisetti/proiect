@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 using namespace std;
+//enumerarea pentru tipurile posibile de data
+//integer are valoarea 0, real 1 si text 2
 enum tip { integer, real, text };
 
 class database;
@@ -73,3 +75,20 @@ public:
 	void select(string nume_tabela, string* nume_coloane, string nume_coloana, string valoare);
 	void update(string nume_tabela, string nume_coloana, string nume_coloana_set, string valoare, string valoare_set);
 };
+
+//clasa care se va ocupa de erori
+class db_exception : public exception
+{
+public:
+	db_exception() :exception("Comanda invalida") {}
+	db_exception(const char* message) : exception(message) {}
+};
+
+//convertire string in uppercase
+string toUpper(string cuvant);
+
+//numarul de cuvinte din comanda
+int get_nr_cuvinte_string(string str);
+
+//lista cuvintelor din comanda
+string* impartire_comenzi_pe_cuvinte(string comenzi);
