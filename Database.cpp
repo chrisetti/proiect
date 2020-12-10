@@ -1,6 +1,9 @@
 #include "Database.h"
+#include <regex>
 #pragma warning(disable:4996)
-
+//initializare constructori clasa db_exception
+db_exception::db_exception() :exception("Comanda invalida") {}
+db_exception::db_exception(const char* message) : exception(message) {}
 column::column()
 {
 

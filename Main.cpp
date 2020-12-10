@@ -11,7 +11,7 @@ int main()
         try
         {
             getline(cin, comenzi);
-            if (comenzi != "") executa_comanda(comenzi);
+            //if (comenzi != "") executa_comanda(comenzi);
             cout << endl;
         }
         catch (db_exception e)

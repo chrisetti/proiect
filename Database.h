@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 using namespace std;
+//enumerarea pentru tipurile posibile de data
+//integer are valoarea 0, real 1 si text 2
 enum tip { integer, real, text };
 
 class database;
