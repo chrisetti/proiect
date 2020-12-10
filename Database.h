@@ -80,15 +80,24 @@ public:
 class db_exception : public exception
 {
 public:
-	db_exception() :exception("Comanda invalida") {}
-	db_exception(const char* message) : exception(message) {}
+	db_exception();
+	db_exception(const char*);
 };
 
 //convertire string in uppercase
-string toUpper(string cuvant);
+string toUpper(string);
 
 //numarul de cuvinte din comanda
-int get_nr_cuvinte_string(string str);
+int get_nr_cuvinte_string(string);
 
 //lista cuvintelor din comanda
-string* impartire_comenzi_pe_cuvinte(string comenzi);
+string* impartire_comenzi_pe_cuvinte(string);
+
+//capitalizeaza cuvintele din comanda
+void capitalizare_comenzi(string*&, int);
+
+//verificare daca comanda poate fi acceptata sintactic
+void verificare_regex(string);
+
+//parser
+void executa_comanda(string);
