@@ -1,10 +1,172 @@
 #include "Database.h"
 #pragma warning(disable:4996)
-column::column(string nume, int dimensiune, tip Tip, string valoare_implicita)
+
+column::column()
 {
 
 }
 
+column::column(string nume, int dimensiune, tip Tip, string valoare_implicita)
+{
+	this->nume = nume;
+	this->dimensiune = dimensiune;
+	this->Tip = Tip;
+	this->valoare_implicita = valoare_implicita;
+}
+
+row::row()
+{
+	valori_rand = nullptr;
+	nr_coloane = 0;
+}
+
+row::row(string* valori_rand, int nr_coloane)
+{
+	if (valori_rand != nullptr && nr_coloane > 0)
+	{
+		this->nr_coloane = nr_coloane;
+		this->valori_rand = new string[nr_coloane];
+		for (int i = 0; i < nr_coloane; i++)
+		{
+			this->valori_rand[i] = valori_rand[i];
+		}
+	}
+}
+
+row::row(const row& r)
+{
+	if (r.valori_rand != nullptr && r.nr_coloane > 0)
+	{
+		this->nr_coloane = r.nr_coloane;
+		this->valori_rand = new string[r.nr_coloane];
+		for (int i = 0; i < r.nr_coloane; i++)
+		{
+			this->valori_rand[i] = r.valori_rand[i];
+		}
+	}
+}
+
+row& row::operator=(const row& r)
+{
+	if (valori_rand != nullptr)
+	{
+		delete[] valori_rand;
+	}
+	if (r.valori_rand != nullptr && r.nr_coloane > 0)
+	{
+		this->nr_coloane = r.nr_coloane;
+		this->valori_rand = new string[r.nr_coloane];
+		for (int i = 0; i < r.nr_coloane; i++)
+		{
+			this->valori_rand[i] = r.valori_rand[i];
+		}
+	}
+	return *this;
+}
+row::~row()
+{
+	if (valori_rand != nullptr)
+	{
+		delete[] valori_rand;
+	}
+}
+
+table::table()
+{
+	coloane = nullptr;
+	nr_coloane = 0;
+	randuri = nullptr;
+	nr_randuri = 0;
+}
+
+table::table(column* coloane, int nr_coloane, row* randuri, int nr_randuri)
+{
+	
+	if (coloane != nullptr && nr_coloane > 0)
+	{
+		this->nr_coloane = nr_coloane;
+		this->coloane = new column[nr_coloane];
+		for (int i = 0; i < nr_coloane; i++)
+		{
+			this->coloane[i] = coloane[i];
+		}
+	}
+	if (randuri != nullptr && nr_randuri > 0)
+	{
+		this->nr_randuri = nr_randuri;
+		this->randuri = new row[nr_randuri];
+		for (int i = 0; i < nr_randuri; i++)
+		{
+			this->randuri[i] = randuri[i];
+		}
+	}
+
+}
+
+table::table(const table& t)
+{
+	if (t.coloane != nullptr && t.nr_coloane > 0)
+	{
+		this->nr_coloane = t.nr_coloane;
+		this->coloane = new column[t.nr_coloane];
+		for (int i = 0; i < t.nr_coloane; i++)
+		{
+			this->coloane[i] = t.coloane[i];
+		}
+	}
+	if (t.randuri != nullptr && t.nr_randuri > 0)
+	{
+		this->nr_randuri = t.nr_randuri;
+		this->randuri = new row[t.nr_randuri];
+		for (int i = 0; i < t.nr_randuri; i++)
+		{
+			this->randuri[i] = t.randuri[i];
+		}
+	}
+}
+
+table&table::operator=(const table& t)
+{
+	if (coloane != nullptr)
+	{
+		delete[] coloane;
+	}
+	if (randuri != nullptr)
+	{
+		delete[] randuri;
+	}
+	if (t.coloane != nullptr && t.nr_coloane > 0)
+	{
+		this->nr_coloane = t.nr_coloane;
+		this->coloane = new column[t.nr_coloane];
+		for (int i = 0; i < t.nr_coloane; i++)
+		{
+			this->coloane[i] = t.coloane[i];
+		}
+	}
+	if (t.randuri != nullptr && t.nr_randuri > 0)
+	{
+		this->nr_randuri = t.nr_randuri;
+		this->randuri = new row[t.nr_randuri];
+		for (int i = 0; i < t.nr_randuri; i++)
+		{
+			this->randuri[i] = t.randuri[i];
+		}
+	}
+	return *this;
+}
+
+table::~table()
+{
+	if (coloane != nullptr)
+	{
+		delete[] coloane;
+	}
+	if (randuri != nullptr)
+	{
+		delete[] randuri;
+	}
+}
 
 string toUpper(string cuvant)
 {

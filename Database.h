@@ -1,8 +1,6 @@
 #pragma once
 #include <string>
 using namespace std;
-//enumerarea pentru tipurile posibile de data
-//integer are valoarea 0, real 1 si text 2
 enum tip { integer, real, text };
 
 class database;
@@ -17,7 +15,9 @@ public:
 	string nume;
 	int dimensiune;
 	string valoare_implicita;
+	tip Tip;
 
+	column();
 	column(string nume, int dimensiune, tip Tip, string valoare_implicita);
 
 };
@@ -27,8 +27,10 @@ class row
 public:
 	friend class table;
 	string* valori_rand;
+	int nr_coloane;
 
-	row(string* valori_rand);
+	row();
+	row(string* valori_rand, int nr_coloane);
 	row(const row& r);
 	row& operator=(const row& r);
 	~row();
@@ -43,6 +45,7 @@ public:
 	row* randuri;
 	int nr_randuri;
 
+	table();
 	table(column* coloane, int nr_coloane, row* randuri, int nr_randuri);
 	table(const table& t);
 	table& operator=(const table& t);
