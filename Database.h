@@ -101,6 +101,10 @@ string* impartire_comenzi_pe_cuvinte(string);
 //capitalizeaza cuvintele din comanda
 void capitalizare_comenzi(string*&, int);
 
+//verificare daca comanda are numarul de paranteze deschise
+//egal cu cel al parantezelor inchise
+void numara_paranteze(string);
+
 //verificare daca comanda poate fi acceptata sintactic
 void verificare_regex(string);
 
