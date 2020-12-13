@@ -207,13 +207,13 @@ string* impartire_comenzi_pe_cuvinte(string comenzi)
     for (int i = 0; i < comenzi.length(); i++)
     {
         char c = comenzi[i];
-        if (!isalnum(c) && c != '.' && cuvinte[index] != "") index++;
+        if (!isalnum(c) && c != '.' && c != '_' && cuvinte[index] != "") index++;
         else if (c == '\'')
         {
             i++;
             while (comenzi[i] != '\'') { cuvinte[index] += comenzi[i];i++; }
         }
-        else if (isalnum(c) || c == '.')cuvinte[index] += c;
+        else if (isalnum(c) || c == '.' || c == '_')cuvinte[index] += c;
     }
     return cuvinte;
 }
@@ -295,7 +295,12 @@ void verificare_regex(string comenzi)
     verifica_regex[7] = regex_update;
 
     regex Regex;
-    bool verifica = 0;int i = 0;
+    bool verifica = 0;int i = 1;
+
+    //comanda "create table" dureaza prea mult sa fie verificata regex
+    if (regex_match(comenzi, regex(sp0 + "Create" + sp1 + "Table(.*)", regex_constants::icase))) verifica = 1;
+
+
     while (!verifica && i < 8)
     {
         Regex = regex(verifica_regex[i], regex_constants::icase);
@@ -411,7 +416,7 @@ void executa_comanda(string comenzi)
     //verificare daca comanda este de tip "Insert into"
     else if (cuvinte[0] == "INSERT" && cuvinte[1] == "INTO")
     {
-        if (nr_cuvinte == 3 || cuvinte[4] != "VALUES") throw db_exception("Lipseste cuvantul cheie \"VALUES\"");
+        if (nr_cuvinte == 3 || cuvinte[3] != "VALUES") throw db_exception("Lipseste cuvantul cheie \"VALUES\"");
         if (nr_cuvinte == 4) throw db_exception("Nu s-au introdus valori");
         //Numele tabelului
         string nume_tabel = cuvinte[2];
@@ -497,6 +502,8 @@ void executa_comanda(string comenzi)
         string valoare_set = cuvinte[4];
         string nume_coloana = cuvinte[6];
         string valoare = cuvinte[7];
+        cout << "Valoarea din tabelul " << nume_tabel <<
+            " a fost modificata" << endl;
     }
     else throw db_exception("Aceasta comanda nu exista");
 }
