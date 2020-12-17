@@ -425,7 +425,7 @@ int table::find_column_index(string coloana_to_find)
 //TODO de tratat caz *
 void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare)
 {
-	int ok_nume_coloana = 0; int nr_rows_returned = 0;
+	int ok_nume_coloana = 0; int nr_rows_returned = 0;bool verifica_where = 1;
 	if (nume_coloane[0] == "ALL" && nume_coloane[1] == "COLUMNS")
 	{
 		nr_coloane_afisare = this->nr_coloane;
@@ -434,14 +434,30 @@ void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_col
 		for (int i = 0;i < nr_coloane_afisare;i++)
 			nume_coloane[i] = this->coloane[i].nume;
 	}
+	cout << "--------------------------------------------------------------------------------------\n";
+	for (int i = 0;i < nr_coloane_afisare;i++)
+	{
+		for (int j = 0;j < nr_coloane;j++)
+		
+			if (this->coloane[j].nume == nume_coloane[i]) cout << nume_coloane[i] << "  |  ";
+		
+	}
+	cout << endl;
+
+	if (nume_coloana == "" && valoare == "")
+		verifica_where = 0;
+
 
 	for (int i = 0; i < nr_coloane; i++)
 	{
+		if (!verifica_where) 
+			nume_coloana = coloane[i].nume;
 		if (coloane[i].nume == nume_coloana)
 		{
 			ok_nume_coloana = 1;
 			for (int j = 0; j < nr_randuri; j++)
 			{
+				if (!verifica_where) valoare = randuri[j].valori_rand[i];
 				if (randuri[j].valori_rand[i] == valoare)
 				{
 					nr_rows_returned++;
@@ -455,8 +471,9 @@ void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_col
 					}
 					cout << endl;
 				}
-				cout << "--------------------------------------------------------------------------------------\n";
 			}
+			cout << "--------------------------------------------------------------------------------------\n";
+			if (!verifica_where) i = nr_coloane;
 		}
 	}
 	if (ok_nume_coloana == 0)
