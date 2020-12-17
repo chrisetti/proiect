@@ -16,8 +16,9 @@ public:
 	friend class table;
 	string nume;
 	int dimensiune;
-	string valoare_implicita;
 	tip Tip;
+	string valoare_implicita;
+
 
 	column();
 	column(string nume, int dimensiune, tip Tip, string valoare_implicita);
@@ -42,13 +43,15 @@ class table
 {
 public:
 	friend class database;
+	string nume;
 	column* coloane;
 	int nr_coloane;
 	row* randuri;
 	int nr_randuri;
 
+
 	table();
-	table(column* coloane, int nr_coloane, row* randuri, int nr_randuri);
+	table(string nume, column* coloane, int nr_coloane, row* randuri, int nr_randuri);
 	table(const table& t);
 	table& operator=(const table& t);
 	~table();
@@ -56,8 +59,11 @@ public:
 	void display_table();
 	void insert_into(string* valori);
 	void delete_from(string nume_coloana, string valoare);
-	void select(string* nume_coloane, string nume_coloana, string valoare);
+	void select(string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare);
 	void update(string nume_coloana, string nume_coloana_set, string valoare, string valoare_set);
+
+	row* delete_row(int index);
+	int find_column_index(string coloana_to_find);
 
 };
 
@@ -67,18 +73,22 @@ public:
 	table* tabele;
 	int nr_tabele;
 
+	database();
 	database(table* tabele, int nr_tabele);
 	database(const database& db);
 	database& operator=(const database& db);
 	~database();
 
-	void create_table(int nr_coloane, string* nume_coloane, tip* tipuri_coloane, int* dimensiune, string* valoare_implicita);
+	void create_table(string nume_tabela, int nr_coloane, string* nume_coloane, tip* tipuri_coloane, int* dimensiune, string* valoare_implicita);
 	void drop_table(string nume_tabela);
 	void display_table(string nume_tabela);
 	void insert_into(string nume_tabela, string* valori);
 	void delete_from(string nume_tabela, string nume_coloana, string valoare);
-	void select(string nume_tabela, string* nume_coloane, string nume_coloana, string valoare);
+	void select(string nume_tabela, string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare);
 	void update(string nume_tabela, string nume_coloana, string nume_coloana_set, string valoare, string valoare_set);
+
+	table* delete_table(int index);
+	int find_index(string nume_tabela);
 };
 
 //clasa care se va ocupa de erori
@@ -90,13 +100,13 @@ public:
 };
 
 //convertire string in uppercase
-string toUpper(string);
+string toUpper(string cuvant);
 
 //numarul de cuvinte din comanda
-int get_nr_cuvinte_string(string);
+int get_nr_cuvinte_string(string str);
 
 //lista cuvintelor din comanda
-string* impartire_comenzi_pe_cuvinte(string);
+string* impartire_comenzi_pe_cuvinte(string comenzi);
 
 //capitalizeaza cuvintele din comanda
 void capitalizare_comenzi(string*&, int);
@@ -109,4 +119,4 @@ void numara_paranteze(string);
 void verificare_regex(string);
 
 //parser
-void executa_comanda(string);
+void executa_comanda(string, database&);

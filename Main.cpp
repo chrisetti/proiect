@@ -5,7 +5,7 @@
 using namespace std;
 int main()
 {
-    //database db();
+    database db;
     string comenzi;
     while (true)
     {
@@ -15,7 +15,7 @@ int main()
             auto t1 = chrono::high_resolution_clock::now();
             if (comenzi != "")
             {
-                executa_comanda(comenzi);
+                executa_comanda(comenzi, db);
                 auto t2 = chrono::high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
                 cout << "Comanda s-a executat in " << (float)duration / 1000000 << " secunde" << endl;

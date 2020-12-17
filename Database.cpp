@@ -1,15 +1,17 @@
 #include <iostream>
+#include <string>
 #include "Database.h"
 #include <regex>
 #pragma warning(disable:4996)
+
 //initializare constructori clasa db_exception
 db_exception::db_exception() :exception("Comanda invalida") {}
 db_exception::db_exception(const char* message) : exception(message) {}
+
 column::column()
 {
 
 }
-
 column::column(string nume, int dimensiune, tip Tip, string valoare_implicita)
 {
 	this->nume = nume;
@@ -35,6 +37,11 @@ row::row(string* valori_rand, int nr_coloane)
 			this->valori_rand[i] = valori_rand[i];
 		}
 	}
+	else
+	{
+		this->valori_rand = nullptr;
+		this->nr_coloane = 0;
+	}
 }
 
 row::row(const row& r)
@@ -47,6 +54,11 @@ row::row(const row& r)
 		{
 			this->valori_rand[i] = r.valori_rand[i];
 		}
+	}
+	else
+	{
+		valori_rand = nullptr;
+		nr_coloane = 0;
 	}
 }
 
@@ -64,6 +76,11 @@ row& row::operator=(const row& r)
 		{
 			this->valori_rand[i] = r.valori_rand[i];
 		}
+	}
+	else
+	{
+		valori_rand = nullptr;
+		nr_coloane = 0;
 	}
 	return *this;
 }
@@ -83,9 +100,9 @@ table::table()
 	nr_randuri = 0;
 }
 
-table::table(column* coloane, int nr_coloane, row* randuri, int nr_randuri)
+table::table(string nume, column* coloane, int nr_coloane, row* randuri, int nr_randuri)
 {
-	
+	this->nume = nume;
 	if (coloane != nullptr && nr_coloane > 0)
 	{
 		this->nr_coloane = nr_coloane;
@@ -94,6 +111,11 @@ table::table(column* coloane, int nr_coloane, row* randuri, int nr_randuri)
 		{
 			this->coloane[i] = coloane[i];
 		}
+	}
+	else
+	{
+		this->nr_coloane = 0;
+		this->coloane = nullptr;
 	}
 	if (randuri != nullptr && nr_randuri > 0)
 	{
@@ -104,11 +126,16 @@ table::table(column* coloane, int nr_coloane, row* randuri, int nr_randuri)
 			this->randuri[i] = randuri[i];
 		}
 	}
-
+	else
+	{
+		this->nr_randuri = 0;
+		this->randuri = nullptr;
+	}
 }
 
 table::table(const table& t)
 {
+	this->nume = t.nume;
 	if (t.coloane != nullptr && t.nr_coloane > 0)
 	{
 		this->nr_coloane = t.nr_coloane;
@@ -117,6 +144,11 @@ table::table(const table& t)
 		{
 			this->coloane[i] = t.coloane[i];
 		}
+	}
+	else
+	{
+		this->nr_coloane = 0;
+		this->coloane = nullptr;
 	}
 	if (t.randuri != nullptr && t.nr_randuri > 0)
 	{
@@ -127,9 +159,14 @@ table::table(const table& t)
 			this->randuri[i] = t.randuri[i];
 		}
 	}
+	else
+	{
+		this->nr_randuri = 0;
+		this->randuri = nullptr;
+	}
 }
 
-table&table::operator=(const table& t)
+table& table::operator=(const table& t)
 {
 	if (coloane != nullptr)
 	{
@@ -139,6 +176,7 @@ table&table::operator=(const table& t)
 	{
 		delete[] randuri;
 	}
+	this->nume = t.nume;
 	if (t.coloane != nullptr && t.nr_coloane > 0)
 	{
 		this->nr_coloane = t.nr_coloane;
@@ -148,6 +186,11 @@ table&table::operator=(const table& t)
 			this->coloane[i] = t.coloane[i];
 		}
 	}
+	else
+	{
+		this->nr_coloane = 0;
+		this->coloane = nullptr;
+	}
 	if (t.randuri != nullptr && t.nr_randuri > 0)
 	{
 		this->nr_randuri = t.nr_randuri;
@@ -156,6 +199,11 @@ table&table::operator=(const table& t)
 		{
 			this->randuri[i] = t.randuri[i];
 		}
+	}
+	else
+	{
+		this->nr_randuri = 0;
+		this->randuri = nullptr;
 	}
 	return *this;
 }
@@ -170,6 +218,380 @@ table::~table()
 	{
 		delete[] randuri;
 	}
+}
+
+database::database()
+{
+	column* coloane = new column[1];
+	column dummy("dummy", 1, text, "X");
+	coloane[0] = dummy;
+	row* randuri = new row[1];
+	string* valori_rand = new string[1];
+	valori_rand[0] = "X";
+	row X(valori_rand, 1);
+	randuri[0] = X;
+	table dual("dual", coloane, 1, randuri, 1);
+	this->tabele = new table[1];
+	this->nr_tabele = 1;
+	this->tabele[0] = dual;
+}
+
+database::database(table* tabele, int nr_tabele)
+{
+	if (tabele != nullptr && nr_tabele > 0)
+	{
+		this->tabele = new table[nr_tabele];
+		this->nr_tabele = nr_tabele;
+		for (int i = 0; i < nr_tabele; i++)
+		{
+			this->tabele[i] = tabele[i];
+		}
+	}
+	else
+	{
+		this->tabele = nullptr;
+		this->nr_tabele = 0;
+	}
+}
+
+database::database(const database& db)
+{
+	if (db.tabele != nullptr && db.nr_tabele > 0)
+	{
+		this->tabele = new table[db.nr_tabele];
+		this->nr_tabele = db.nr_tabele;
+		for (int i = 0; i < db.nr_tabele; i++)
+		{
+			this->tabele[i] = db.tabele[i];
+		}
+	}
+	else
+	{
+		this->tabele = nullptr;
+		this->nr_tabele = 0;
+	}
+}
+database& database::operator=(const database& db)
+{
+	if (this->tabele != nullptr)
+	{
+		delete[] this->tabele;
+	}
+
+	if (db.tabele != nullptr && db.nr_tabele > 0)
+	{
+		this->tabele = new table[db.nr_tabele];
+		this->nr_tabele = db.nr_tabele;
+		for (int i = 0; i < db.nr_tabele; i++)
+		{
+			this->tabele[i] = db.tabele[i];
+		}
+	}
+	else
+	{
+		this->tabele = nullptr;
+		this->nr_tabele = 0;
+	}
+	return *this;
+}
+
+database::~database()
+{
+	if (tabele != nullptr)
+	{
+		delete[] tabele;
+	}
+}
+
+row* table::delete_row(int index)
+{
+	row* aux = new row[nr_randuri - 1];
+	int k = 0;
+	for (int i = 0; i < nr_randuri; i++)
+	{
+		if (i != index)
+		{
+			aux[k++] = randuri[i];
+		}
+	}
+	delete[] randuri;
+	return aux;
+}
+
+void table::display_table()
+{
+	cout << "-------------------------------------------------------------------------------------------------\n";
+	for (int i = 0; i < this->nr_coloane; i++)
+	{
+		cout << this->coloane[i].nume << "  |  ";
+	}
+	cout << endl;
+	cout << "-------------------------------------------------------------------------------------------------\n";
+	for (int i = 0; i < this->nr_randuri; i++)
+	{
+		for (int j = 0; j < this->nr_coloane; j++)
+		{
+			cout << this->randuri[i].valori_rand[j] << "  |  ";
+		}
+		cout << endl;
+		cout << "-------------------------------------------------------------------------------------------------\n";
+	}
+	if (nr_randuri == 1)
+	{
+		cout << endl << nr_randuri << " row returned.";
+	}
+	else
+	{
+		cout << endl << this->nr_randuri << " rows returned.";
+	}
+
+}
+
+void table::insert_into(string* valori)
+{
+	table aux;
+	if (nr_randuri == 0) aux.randuri = NULL;
+	else aux.randuri = new row[nr_randuri];
+	for (int i = 0;i < nr_randuri;i++)
+	{
+		aux.randuri[i].nr_coloane = this->nr_coloane;
+		aux.randuri[i].valori_rand = new string[nr_coloane];
+		for (int j = 0;j < nr_coloane;j++)
+			aux.randuri[i].valori_rand[j] = randuri[i].valori_rand[j];
+	}
+	if(randuri) delete[]randuri;
+	randuri = new row[nr_randuri + 1];
+	for (int i = 0;i < nr_randuri;i++)
+	{
+		randuri[i].nr_coloane = aux.randuri[i].nr_coloane;
+		randuri[i].valori_rand = new string[nr_coloane];
+		for (int j = 0;j < nr_coloane;j++)
+			randuri[i].valori_rand[j] = aux.randuri[i].valori_rand[j];
+	}
+	randuri[nr_randuri].valori_rand = new string[nr_coloane];
+	randuri[nr_randuri].nr_coloane = this->nr_coloane;
+	for (int i = 0; i < nr_coloane; i++)
+	{
+		randuri[nr_randuri].valori_rand[i] = valori[i];
+	}
+	nr_randuri++;
+}
+
+void table::delete_from(string nume_coloana, string valoare)
+{
+	int ok_nume_coloana = 0, nr_rows_deleted = 0;
+	for (int i = 0; i < nr_coloane; i++)
+	{
+		if (coloane[i].nume == nume_coloana)
+		{
+			ok_nume_coloana = 1;
+			for (int j = 0; j < nr_randuri; j++)
+			{
+				if (randuri[j].valori_rand[i] == valoare)
+				{
+					randuri = delete_row(j);
+					nr_randuri--;
+					nr_rows_deleted++;
+				}
+			}
+		}
+	}
+	if (ok_nume_coloana == 0)
+	{
+		throw db_exception("Nu exista nicio coloana cu acest nume");
+	}
+	if (nr_rows_deleted == 1)
+	{
+		cout << nr_rows_deleted << " row deleted.";
+	}
+	else
+	{
+		cout << nr_rows_deleted << " rows deleted.";
+	}
+}
+
+int table::find_column_index(string coloana_to_find)
+{
+	for (int i = 0; i < nr_coloane; i++)
+	{
+		if (coloane[i].nume == coloana_to_find)
+		{
+			return i;
+		}
+	}
+
+	throw db_exception("Aceasta coloana nu exista");
+}
+//TODO de tratat caz *
+void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare)
+{
+	int ok_nume_coloana = 0; int nr_rows_returned = 0;
+	if (nume_coloane[0] == "ALL" && nume_coloane[1] == "COLUMNS")
+	{
+		nr_coloane_afisare = this->nr_coloane;
+		delete[]nume_coloane;
+		nume_coloane = new string[nr_coloane_afisare];
+		for (int i = 0;i < nr_coloane_afisare;i++)
+			nume_coloane[i] = this->coloane[i].nume;
+	}
+
+	for (int i = 0; i < nr_coloane; i++)
+	{
+		if (coloane[i].nume == nume_coloana)
+		{
+			ok_nume_coloana = 1;
+			for (int j = 0; j < nr_randuri; j++)
+			{
+				if (randuri[j].valori_rand[i] == valoare)
+				{
+					nr_rows_returned++;
+					int n = 0;
+					cout << "---------------------------------------------------------------------------------------" << endl;
+					while (n < nr_coloane_afisare)
+					{
+						int index = find_column_index(nume_coloane[n]);
+						cout << randuri[j].valori_rand[index] << "  |  ";
+						n++;
+					}
+					cout << endl;
+				}
+				cout << "--------------------------------------------------------------------------------------\n";
+			}
+		}
+	}
+	if (ok_nume_coloana == 0)
+	{
+		throw db_exception("Aceasta coloana nu exista");
+	}
+	if (nr_rows_returned == 1)
+	{
+		cout << nr_rows_returned << " row returned.";
+	}
+	else
+	{
+		cout << endl << nr_rows_returned << " rows returned.";
+	}
+}
+
+void table::update(string nume_coloana, string nume_coloana_set, string valoare, string valoare_set)
+{
+	int  nr_rows_updated = 0;
+	int index_set = find_column_index(nume_coloana_set);
+	
+	int index = find_column_index(nume_coloana);
+	for (int j = 0; j < nr_randuri; j++)
+	{
+		if (randuri[j].valori_rand[index] == valoare)
+		{
+			randuri[j].valori_rand[index_set] = valoare_set;
+			nr_rows_updated++;
+		}
+	}
+	
+	if (nr_rows_updated == 1)
+	{
+		cout << nr_rows_updated << " row updated.";
+	}
+	else
+	{
+		cout << nr_rows_updated << " rows updated.";
+	}
+}
+
+int database::find_index(string nume_tabela)
+{
+	for (int i = 0; i < nr_tabele; i++)
+	{
+		if (tabele[i].nume == nume_tabela)
+		{
+			return i;
+		}
+	}
+
+	throw db_exception("Aceasta tabela nu exista");
+}
+
+table* database::delete_table(int index)
+{
+	table* aux = new table[nr_tabele - 1];
+	int k = 0;
+	for (int i = 0; i < nr_tabele; i++)
+	{
+		if (i != index)
+		{
+			aux[k++] = tabele[i];
+		}
+	}
+	delete[] tabele;
+	return aux;
+}
+
+void database::create_table(string nume_tabela, int nr_coloane, string* nume_coloane, tip* tipuri_coloane, int* dimensiune, string* valoare_implicita)
+{
+
+	for (int i = 0; i < nr_tabele; i++)
+	{
+		if (tabele[i].nume == nume_tabela)
+		{
+			throw db_exception("Tabela exista deja. Incercati alt nume.");
+		}
+	}
+
+	column* coloane = new column[nr_coloane];
+	for (int i = 0; i < nr_coloane; i++)
+	{
+		coloane[i].dimensiune = dimensiune[i];
+		coloane[i].nume = nume_coloane[i];
+		coloane[i].Tip = tipuri_coloane[i];
+		coloane[i].valoare_implicita = valoare_implicita[i];
+	}
+	database aux;
+	aux.nr_tabele = nr_tabele;
+	aux.tabele = new table[nr_tabele];
+	for (int i = 0;i < nr_tabele;i++) aux.tabele[i] = tabele[i];
+	delete[] tabele;
+	tabele = new table[nr_tabele + 1];
+	for (int i = 0;i < nr_tabele;i++) tabele[i] = aux.tabele[i];
+	tabele[nr_tabele++] = table(nume_tabela, coloane, nr_coloane, nullptr, 0);
+}
+
+
+
+void database::drop_table(string nume_tabela)
+{
+	int index = find_index(nume_tabela);
+	tabele = delete_table(index);
+	nr_tabele--;
+}
+
+void database::display_table(string nume_tabela)
+{
+	int index = find_index(nume_tabela);
+	tabele[index].display_table();
+}
+
+void database::insert_into(string nume_tabela, string* valori)
+{
+	int index = find_index(nume_tabela);
+	tabele[index].insert_into(valori);
+}
+
+void database::delete_from(string nume_tabela, string nume_coloana, string valoare)
+{
+	int index = find_index(nume_tabela);
+	tabele[index].delete_from(nume_coloana, valoare);
+}
+
+void database::select(string nume_tabela, string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare)
+{
+	int index = find_index(nume_tabela);
+	tabele[index].select(nume_coloane, nr_coloane_afisare, nume_coloana, valoare);
+}
+
+void database::update(string nume_tabela, string nume_coloana, string nume_coloana_set, string valoare, string valoare_set)
+{
+	int index = find_index(nume_tabela);
+	tabele[index].update(nume_coloana, nume_coloana_set, valoare, valoare_set);
 }
 
 string toUpper(string cuvant)
@@ -227,7 +649,7 @@ void capitalizare_comenzi(string*& comenzi, int nr_cuvinte)
 void numara_paranteze(string comenzi)
 {
     int cnt1 = 0, cnt2 = 0;
-    for (int i = 0;i < comenzi.size();i++) 
+    for (int i = 0;i < comenzi.size();i++)
     {
         if (comenzi[i] == '(') cnt1++;
         else if (comenzi[i] == ')') cnt2++;
@@ -300,6 +722,12 @@ void verificare_regex(string comenzi)
     //comanda "create table" dureaza prea mult sa fie verificata regex
     if (regex_match(comenzi, regex(sp0 + "Create" + sp1 + "Table(.*)", regex_constants::icase))) verifica = 1;
 
+	//comanda "update" dureaza prea mult sa fie verificata regex
+	if (regex_match(comenzi, regex(sp0 + "update(.*)", regex_constants::icase)))
+	{
+		verifica = 1;
+	}
+
 
     while (!verifica && i < 8)
     {
@@ -309,11 +737,11 @@ void verificare_regex(string comenzi)
     }
     delete[]verifica_regex;
     if (!verifica) throw db_exception("Aceasta comanda nu exista");
-   
+
 }
 
 //functia principala care executa comanda
-void executa_comanda(string comenzi)
+void executa_comanda(string comenzi, database &db)
 {
 
     //verificare sintactica comenzi
@@ -329,8 +757,9 @@ void executa_comanda(string comenzi)
     string* cuvinte = impartire_comenzi_pe_cuvinte(comenzi);
     capitalizare_comenzi(cuvinte, nr_cuvinte);
     //afisare cuvinte pe randuri diferite
-    for (int i = 0;i < nr_cuvinte;i++)
-        cout << cuvinte[i] << endl;
+
+    /*for (int i = 0;i < nr_cuvinte;i++)
+        cout << cuvinte[i] << endl;*/
 
     if (nr_cuvinte <= 2) throw db_exception("Aceasta comanda nu exista");
 
@@ -338,7 +767,7 @@ void executa_comanda(string comenzi)
     if (cuvinte[0] == "CREATE" && cuvinte[1] == "TABLE")
     {
         //eleminare comanda redundanta "if not exists" daca este cazul
-        
+
         if (cuvinte[3] == "IF" && cuvinte[4] == "NOT" && cuvinte[5] == "EXISTS")
         {
             string* aux = new string[nr_cuvinte];
@@ -388,6 +817,7 @@ void executa_comanda(string comenzi)
                 << dimensiuni_coloane[index] << ' ' << valoare_implicita[index] << endl;*/
 
         }
+		db.create_table(nume_tabel, nr_coloane, nume_coloane, tipuri_coloane, dimensiuni_coloane, valori_implicite);
         //afisare mesaj aferent executarii comenzii
         cout << endl << "A fost creat tabelul " << nume_tabel << " cu coloanele: ";
         for (int i = 0;i < nr_coloane;i++)
@@ -404,6 +834,7 @@ void executa_comanda(string comenzi)
         string nume_tabel = cuvinte[2];
         //afisare mesaj aferent executarii comenzii
         cout << "Tabelul " + nume_tabel + " a fost sters" << endl;
+		db.drop_table(nume_tabel);
     }
     //verificare daca comanda este de tip "Display Table"
     else if (cuvinte[0] == "DISPLAY" && cuvinte[1] == "TABLE")
@@ -411,7 +842,9 @@ void executa_comanda(string comenzi)
         //Numele tabelului care trebuie afisat
         string nume_tabel = cuvinte[2];
         //afisare mesaj aferent executarii comenzii
-        cout << "Tabelul " + nume_tabel + ":" << endl;
+        
+		db.display_table(nume_tabel);
+		
     }
     //verificare daca comanda este de tip "Insert into"
     else if (cuvinte[0] == "INSERT" && cuvinte[1] == "INTO")
@@ -424,6 +857,7 @@ void executa_comanda(string comenzi)
         string* valori = new string[nr_cuvinte - 4];
         for (int i = 0;i < nr_cuvinte - 4;i++)
             valori[i] = cuvinte[i + 4];
+		db.insert_into(nume_tabel, valori);
         cout << "S-au introdus valorile in tabelul " << nume_tabel << endl;
     }
     //verificare daca comanda este de tip "Delete from"
@@ -435,6 +869,7 @@ void executa_comanda(string comenzi)
         string nume_tabel = cuvinte[2];
         string nume_coloana = cuvinte[4];
         string valoare = cuvinte[5];
+		db.delete_from(nume_tabel, nume_coloana, valoare);
         cout << "S-a sters randul cu valoarea " << valoare << endl;
     }
     //verificare daca comanda este de tip "Select"
@@ -461,7 +896,7 @@ void executa_comanda(string comenzi)
                     valoare = cuvinte[6];
                 }
                 else throw db_exception("Lipseste cuvantul cheie \"FROM\"");
-
+			db.select(nume_tabel, nume_coloane, 2, nume_coloana, valoare);
 
         }
         else if (cuvinte[i] == "FROM") throw db_exception("Lipsesc coloanele care trebuie selectate");
@@ -474,6 +909,7 @@ void executa_comanda(string comenzi)
                 i++;
             }
             string* nume_coloane = new string[i - 1];
+			int nr_coloane_afisare = i - 1;
             for (int index = 0;index < i - 1;index++)
                 nume_coloane[index] = cuvinte[index + 1];
             if (cuvinte[i + 1] == "") throw db_exception("Lipseste numele tabelului");
@@ -489,6 +925,7 @@ void executa_comanda(string comenzi)
                 }
                 else throw db_exception("Lipseste cuvantul cheie \"FROM\"");
             }
+			db.select(nume_tabel, nume_coloane,nr_coloane_afisare, nume_coloana, valoare);
         }
     }
     //verificare daca comanda este de tip "Update"
@@ -502,6 +939,7 @@ void executa_comanda(string comenzi)
         string valoare_set = cuvinte[4];
         string nume_coloana = cuvinte[6];
         string valoare = cuvinte[7];
+		db.update(nume_tabel, nume_coloana, nume_coloana_set, valoare, valoare_set);
         cout << "Valoarea din tabelul " << nume_tabel <<
             " a fost modificata" << endl;
     }
