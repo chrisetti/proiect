@@ -5,6 +5,7 @@
 using namespace std;
 int main()
 {
+    system("color 9f");
     database db;
     string comenzi;
     while (true)
