@@ -1,5 +1,8 @@
 #pragma once
+#include <iostream>
 #include <string>
+#include <regex>
+#include <chrono>
 using namespace std;
 //enumerarea pentru tipurile posibile de data
 //integer are valoarea 0, real 1 si text 2

@@ -1,8 +1,5 @@
-#include <iostream>
-#include <string>
-#include <chrono>
 #include "Database.h"
-using namespace std;
+
 int main()
 {
     system("color 9f");

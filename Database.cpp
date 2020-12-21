@@ -1,7 +1,4 @@
-#include <iostream>
-#include <string>
 #include "Database.h"
-#include <regex>
 #pragma warning(disable:4996)
 
 //initializare constructori clasa db_exception
@@ -349,6 +346,25 @@ void table::display_table()
 
 void table::insert_into(string* valori)
 {
+	for (int i = 0;i < this->nr_coloane;i++)
+	{
+		if (valori[i].length() > this->coloane[i].dimensiune)
+		{
+			string mesaj_eroare = "Valoarea introdusa pentru coloana " + this->coloane[i].nume + " este prea mare";
+			throw db_exception(mesaj_eroare.c_str());
+		}
+		if (this->coloane[i].Tip == integer)
+		{
+			if (!regex_match(valori[i], regex("[[:d:]]+")))
+				throw db_exception("Valoare invalida pentru INTEGER");
+		}
+		else if (this->coloane[i].Tip == real)
+		{
+			if (!regex_match(valori[i], regex("[[:d:]]+(.)?[[:d:]]*")))
+				throw db_exception("Valoare invalida pentru FLOAT");
+			valori[i] = to_string(stof(valori[i]));
+		}
+	}
 	table aux;
 	if (nr_randuri == 0) aux.randuri = NULL;
 	else aux.randuri = new row[nr_randuri];
@@ -387,10 +403,15 @@ void table::delete_from(string nume_coloana, string valoare)
 			ok_nume_coloana = 1;
 			for (int j = 0; j < nr_randuri; j++)
 			{
+				if (coloane[i].Tip == real)
+				{
+					valoare = to_string(stof(valoare));
+				}
 				if (randuri[j].valori_rand[i] == valoare)
 				{
 					randuri = delete_row(j);
 					nr_randuri--;
+					j--;
 					nr_rows_deleted++;
 				}
 			}
@@ -454,6 +475,8 @@ void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_col
 			nume_coloana = coloane[i].nume;
 		if (coloane[i].nume == nume_coloana)
 		{
+			if (coloane[i].Tip == real)
+				valoare = to_string(stof(valoare));
 			ok_nume_coloana = 1;
 			for (int j = 0; j < nr_randuri; j++)
 			{
@@ -496,10 +519,29 @@ void table::update(string nume_coloana, string nume_coloana_set, string valoare,
 	int index_set = find_column_index(nume_coloana_set);
 	
 	int index = find_column_index(nume_coloana);
+	if (this->coloane[index].Tip == real)
+		valoare = to_string(stof(valoare));
 	for (int j = 0; j < nr_randuri; j++)
 	{
+
 		if (randuri[j].valori_rand[index] == valoare)
 		{
+			if (valoare_set.length() > this->coloane[index_set].dimensiune)
+			{
+				string mesaj_eroare = "Valoarea introdusa pentru coloana " + this->coloane[index_set].nume + " este prea mare";
+				throw db_exception(mesaj_eroare.c_str());
+			}
+			if (this->coloane[index_set].Tip == integer)
+			{
+				if (!regex_match(valoare_set, regex("[[:d:]]+")))
+					throw db_exception("Valoare invalida pentru INTEGER");
+			}
+			else if (this->coloane[index_set].Tip == real)
+			{
+				if (!regex_match(valoare_set, regex("[[:d:]]+(.)?[[:d:]]*")))
+					throw db_exception("Valoare invalida pentru FLOAT");
+				valoare_set = to_string(stof(valoare_set));
+			}
 			randuri[j].valori_rand[index_set] = valoare_set;
 			nr_rows_updated++;
 		}
@@ -678,8 +720,6 @@ void verificare_regex(string comenzi)
 {
     string sp0 = "[[:s:]]*";
     string sp1 = "[[:s:]]+";
-    string sp01 = "[[:s:]]?";
-    string w0 = "[[:w:]]*";
     string w1 = "[[:w:]]+";
     string d0 = "[[:d:]]*";
     string d1 = "[[:d:]]+";
@@ -688,7 +728,8 @@ void verificare_regex(string comenzi)
     string nr_real = sp0 + d1 + "\\." + d0 + sp0;
     string grup_cuvinte = "(" + sp0 + caracter + sp0 + ")+";
     string text = "'" + grup_cuvinte + "'";
-    string valori = "((" + nr_intreg + ")|(" + nr_real + ")|(" + text + "))";
+    //string valori = "((" + nr_intreg + ")|(" + nr_real + ")|(" + text + "))";
+	string valori = "(.*)";
 
     //create_table
     string regex_coloana = "(\\(" + sp0 + w1 + sp0 + "," + sp0 + w1 + sp0 + "," + sp0 + d1
@@ -740,10 +781,10 @@ void verificare_regex(string comenzi)
     if (regex_match(comenzi, regex(sp0 + "Create" + sp1 + "Table(.*)", regex_constants::icase))) verifica = 1;
 
 	//comanda "update" dureaza prea mult sa fie verificata regex
-	if (regex_match(comenzi, regex(sp0 + "update(.*)", regex_constants::icase)))
+	/*if (regex_match(comenzi, regex(sp0 + "update(.*)", regex_constants::icase)))
 	{
 		verifica = 1;
-	}
+	}*/
 
 
     while (!verifica && i < 8)
@@ -850,8 +891,8 @@ void executa_comanda(string comenzi, database &db)
         //Numele tabelului care trebuie sters
         string nume_tabel = cuvinte[2];
         //afisare mesaj aferent executarii comenzii
-        cout << "Tabelul " + nume_tabel + " a fost sters" << endl;
 		db.drop_table(nume_tabel);
+		cout << "Tabelul " + nume_tabel + " a fost sters" << endl;
     }
     //verificare daca comanda este de tip "Display Table"
     else if (cuvinte[0] == "DISPLAY" && cuvinte[1] == "TABLE")
@@ -887,7 +928,7 @@ void executa_comanda(string comenzi, database &db)
         string nume_coloana = cuvinte[4];
         string valoare = cuvinte[5];
 		db.delete_from(nume_tabel, nume_coloana, valoare);
-        cout << "S-a sters randul cu valoarea " << valoare << endl;
+        //cout << "S-a sters randul cu valoarea " << valoare << endl;
     }
     //verificare daca comanda este de tip "Select"
     else if (cuvinte[0] == "SELECT")
