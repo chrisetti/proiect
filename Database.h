@@ -3,6 +3,7 @@
 #include <string>
 #include <regex>
 #include <chrono>
+#include <iomanip>
 using namespace std;
 //enumerarea pentru tipurile posibile de data
 //integer are valoarea 0, real 1 si text 2
@@ -85,13 +86,13 @@ public:
 	void create_table(string nume_tabela, int nr_coloane, string* nume_coloane, tip* tipuri_coloane, int* dimensiune, string* valoare_implicita);
 	void drop_table(string nume_tabela);
 	void display_table(string nume_tabela);
-	void insert_into(string nume_tabela, string* valori);
+	void insert_into(string nume_tabela, string* valori, int nr_valori);
 	void delete_from(string nume_tabela, string nume_coloana, string valoare);
 	void select(string nume_tabela, string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare);
 	void update(string nume_tabela, string nume_coloana, string nume_coloana_set, string valoare, string valoare_set);
 
-	table* delete_table(int index);
-	int find_index(string nume_tabela);
+	table* delete_table(int);
+	int find_index(string);
 };
 
 //clasa care se va ocupa de erori
@@ -100,16 +101,17 @@ class db_exception : public exception
 public:
 	db_exception();
 	db_exception(const char*);
+	db_exception(string);
 };
 
 //convertire string in uppercase
-string toUpper(string cuvant);
+string toUpper(string);
 
 //numarul de cuvinte din comanda
-int get_nr_cuvinte_string(string str);
+int get_nr_cuvinte_string(string);
 
 //lista cuvintelor din comanda
-string* impartire_comenzi_pe_cuvinte(string comenzi);
+string* impartire_comenzi_pe_cuvinte(string);
 
 //capitalizeaza cuvintele din comanda
 void capitalizare_comenzi(string*&, int);

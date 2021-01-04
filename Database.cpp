@@ -4,10 +4,14 @@
 //initializare constructori clasa db_exception
 db_exception::db_exception() :exception("Comanda invalida") {}
 db_exception::db_exception(const char* message) : exception(message) {}
+db_exception::db_exception(string message) : db_exception::db_exception(message.c_str()) {}
 
 column::column()
 {
-
+	nume = "";
+	dimensiune = 0;
+	Tip = text;
+	valoare_implicita = "";
 }
 column::column(string nume, int dimensiune, tip Tip, string valoare_implicita)
 {
@@ -317,10 +321,18 @@ row* table::delete_row(int index)
 
 void table::display_table()
 {
+	cout << left;int lungime_maxima = 0;
+	for (int i = 0;i < this->nr_coloane;i++)
+	{
+		if (lungime_maxima < this->coloane[i].dimensiune)
+		{
+			lungime_maxima = this->coloane[i].dimensiune;
+		}
+	}
 	cout << "-------------------------------------------------------------------------------------------------\n";
 	for (int i = 0; i < this->nr_coloane; i++)
 	{
-		cout << this->coloane[i].nume << "  |  ";
+		cout << setw(lungime_maxima) << this->coloane[i].nume << "  |  ";
 	}
 	cout << endl;
 	cout << "-------------------------------------------------------------------------------------------------\n";
@@ -328,7 +340,7 @@ void table::display_table()
 	{
 		for (int j = 0; j < this->nr_coloane; j++)
 		{
-			cout << this->randuri[i].valori_rand[j] << "  |  ";
+			cout << setw(lungime_maxima) << this->randuri[i].valori_rand[j] << "  |  ";
 		}
 		cout << endl;
 		cout << "-------------------------------------------------------------------------------------------------\n";
@@ -443,9 +455,17 @@ int table::find_column_index(string coloana_to_find)
 
 	throw db_exception("Aceasta coloana nu exista");
 }
-//TODO de tratat caz *
+
 void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare)
 {
+	cout << left;int lungime_maxima = 0;
+	for (int i = 0;i < this->nr_coloane;i++)
+	{
+		if (lungime_maxima < this->coloane[i].dimensiune)
+		{
+			lungime_maxima = this->coloane[i].dimensiune;
+		}
+	}
 	int ok_nume_coloana = 0; int nr_rows_returned = 0;bool verifica_where = 1;
 	if (nume_coloane[0] == "ALL" && nume_coloane[1] == "COLUMNS")
 	{
@@ -460,7 +480,7 @@ void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_col
 	{
 		for (int j = 0;j < nr_coloane;j++)
 		
-			if (this->coloane[j].nume == nume_coloane[i]) cout << nume_coloane[i] << "  |  ";
+			if (this->coloane[j].nume == nume_coloane[i]) cout << setw(lungime_maxima) << nume_coloane[i] << "  |  ";
 		
 	}
 	cout << endl;
@@ -489,7 +509,7 @@ void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_col
 					while (n < nr_coloane_afisare)
 					{
 						int index = find_column_index(nume_coloane[n]);
-						cout << randuri[j].valori_rand[index] << "  |  ";
+						cout << setw(lungime_maxima) << randuri[j].valori_rand[index] << "  |  ";
 						n++;
 					}
 					cout << endl;
@@ -629,9 +649,13 @@ void database::display_table(string nume_tabela)
 	tabele[index].display_table();
 }
 
-void database::insert_into(string nume_tabela, string* valori)
+void database::insert_into(string nume_tabela, string* valori, int nr_valori)
 {
 	int index = find_index(nume_tabela);
+	if (nr_valori > tabele[index].nr_coloane)
+	{
+		throw db_exception("Prea multe valori de inserat");
+	}
 	tabele[index].insert_into(valori);
 }
 
@@ -724,20 +748,19 @@ void verificare_regex(string comenzi)
     string d0 = "[[:d:]]*";
     string d1 = "[[:d:]]+";
     string caracter = "(.*)";
-    string nr_intreg = sp0 + d1 + sp0;
-    string nr_real = sp0 + d1 + "\\." + d0 + sp0;
-    string grup_cuvinte = "(" + sp0 + caracter + sp0 + ")+";
-    string text = "'" + grup_cuvinte + "'";
+    //string nr_intreg = sp0 + d1 + sp0;
+    //string nr_real = sp0 + d1 + "\\." + d0 + sp0;
+    //string grup_cuvinte = "(" + sp0 + caracter + sp0 + ")+";
+    //string text = "'" + grup_cuvinte + "'";
     //string valori = "((" + nr_intreg + ")|(" + nr_real + ")|(" + text + "))";
 	string valori = "(.*)";
 
     //create_table
-    string regex_coloana = "(\\(" + sp0 + w1 + sp0 + "," + sp0 + w1 + sp0 + "," + sp0 + d1
-        + sp0 + "," + sp0 + valori + sp0 + "\\))";
-    string regex_if_not_exists = "(" + sp1 + "if" + sp1 + "not" + sp1 + "exists" + sp0 + ")?";
-    string regex_create_table = sp0 + "create" + sp1 + "table" + sp1 + w1 + regex_if_not_exists + sp0;
-    string regex_create_table_2 = "\\(" + sp0 + regex_coloana + sp0 + "(" + sp0 + "," + sp0 + regex_coloana + sp0 + ")*" + "\\)" + sp0;
-    string regex_create_table_final = regex_create_table + regex_create_table_2;
+	string regex_create_1 =
+		sp0 + "create" + sp1 + "table" + sp1 + w1 + sp0 + "(" + sp1 + "if" + sp1 + "not" + sp1 + "exists" + sp0 + ")?" + sp0;
+	string regex_coloana = "\\(" + sp0 + w1 + sp0 + "," + sp0 + "(text|float|integer)" + sp0 + "," + sp0 + d1 + sp0 + "," + sp0 + caracter + sp0 + "\\)";
+	string regex_create_2 = "\\(" + sp0 + regex_coloana + sp0 + "(," + sp0 + regex_coloana + sp0 + ")*" + sp0 + "\\)" + sp0;
+	string regex_create_table = regex_create_1 + regex_create_2;
 
     //drop table
     string regex_drop_table = sp0 + "Drop" + sp1 + "Table" + sp1 + w1 + sp0;
@@ -765,7 +788,7 @@ void verificare_regex(string comenzi)
         sp0 + valori + sp1 + "where" + sp1 + w1 + sp0 + "=" + sp0 + valori + sp0;
 
     string* verifica_regex = new string[8];
-    verifica_regex[0] = regex_create_table_final;
+    verifica_regex[0] = regex_create_table;
     verifica_regex[1] = regex_display_table;
     verifica_regex[2] = regex_insert_into;
     verifica_regex[3] = regex_delete_from;
@@ -775,16 +798,7 @@ void verificare_regex(string comenzi)
     verifica_regex[7] = regex_update;
 
     regex Regex;
-    bool verifica = 0;int i = 1;
-
-    //comanda "create table" dureaza prea mult sa fie verificata regex
-    if (regex_match(comenzi, regex(sp0 + "Create" + sp1 + "Table(.*)", regex_constants::icase))) verifica = 1;
-
-	//comanda "update" dureaza prea mult sa fie verificata regex
-	/*if (regex_match(comenzi, regex(sp0 + "update(.*)", regex_constants::icase)))
-	{
-		verifica = 1;
-	}*/
+    bool verifica = 0;int i = 0;
 
 
     while (!verifica && i < 8)
@@ -915,7 +929,7 @@ void executa_comanda(string comenzi, database &db)
         string* valori = new string[nr_cuvinte - 4];
         for (int i = 0;i < nr_cuvinte - 4;i++)
             valori[i] = cuvinte[i + 4];
-		db.insert_into(nume_tabel, valori);
+		db.insert_into(nume_tabel, valori, nr_cuvinte - 4);
         cout << "S-au introdus valorile in tabelul " << nume_tabel << endl;
     }
     //verificare daca comanda este de tip "Delete from"
