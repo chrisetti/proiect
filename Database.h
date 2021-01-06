@@ -1,9 +1,11 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <regex>
 #include <chrono>
 #include <iomanip>
+#include <sstream>
 using namespace std;
 //enumerarea pentru tipurile posibile de data
 //integer are valoarea 0, real 1 si text 2
@@ -104,6 +106,56 @@ public:
 	db_exception(string);
 };
 
+class fisier_binar
+{
+public:
+	string nume;
+	string structura_tabel;
+	fisier_binar();
+	fisier_binar(string, string);
+	string** citeste_binar(int&);
+	void scrie_binar_append(string*, int);
+	void scrie_binar_sterge(string);
+	void scrie_binar_inlocuire(string, string*, int);
+};
+
+class fisier_text
+{
+public:
+	string nume;
+	virtual string** citeste_text(int&) = 0;
+};
+
+class fisier_txt:fisier_text
+{
+public:
+	fisier_txt(string);
+	void scrie_text(string*, int);
+	string** citeste_text(int&) override;
+	void scrie_text_append(string*, int);
+	void scrie_text_sterge(string);
+};
+
+class fisier_csv :fisier_text
+{
+public:
+	int nr_coloane;
+	string** citeste_text(int&) override;
+};
+
+class structura_fisiere
+{
+public:
+	fisier_binar* fbin;
+	fisier_txt* ftext;
+	int nr_fbin;
+	int nr_ftext;
+	database db;
+	static fisier_txt structura_tabele;
+	structura_fisiere();
+	void executa_comenzi_initiale(int, char* []);
+};
+
 //convertire string in uppercase
 string toUpper(string);
 
@@ -124,4 +176,4 @@ void numara_paranteze(string);
 void verificare_regex(string);
 
 //parser
-void executa_comanda(string, database&);
+void executa_comanda(string, database&, fisier_binar*&, int&, fisier_txt&);

@@ -224,14 +224,14 @@ table::~table()
 database::database()
 {
 	column* coloane = new column[1];
-	column dummy("dummy", 1, text, "X");
+	column dummy("DUMMY", 1, text, "X");
 	coloane[0] = dummy;
 	row* randuri = new row[1];
 	string* valori_rand = new string[1];
 	valori_rand[0] = "X";
 	row X(valori_rand, 1);
 	randuri[0] = X;
-	table dual("dual", coloane, 1, randuri, 1);
+	table dual("DUAL", coloane, 1, randuri, 1);
 	this->tabele = new table[1];
 	this->nr_tabele = 1;
 	this->tabele[0] = dual;
@@ -351,7 +351,7 @@ void table::display_table()
 	}
 	else
 	{
-		cout << endl << this->nr_randuri << " rows returned.";
+		cout << endl << this->nr_randuri << " rows returned." << endl;
 	}
 
 }
@@ -569,11 +569,11 @@ void table::update(string nume_coloana, string nume_coloana_set, string valoare,
 	
 	if (nr_rows_updated == 1)
 	{
-		cout << nr_rows_updated << " row updated.";
+		cout << nr_rows_updated << " row updated. ";
 	}
 	else
 	{
-		cout << nr_rows_updated << " rows updated.";
+		cout << nr_rows_updated << " rows updated. ";
 	}
 }
 
@@ -632,6 +632,8 @@ void database::create_table(string nume_tabela, int nr_coloane, string* nume_col
 	tabele = new table[nr_tabele + 1];
 	for (int i = 0;i < nr_tabele;i++) tabele[i] = aux.tabele[i];
 	tabele[nr_tabele++] = table(nume_tabela, coloane, nr_coloane, nullptr, 0);
+
+	
 }
 
 
@@ -742,18 +744,12 @@ void numara_paranteze(string comenzi)
 
 void verificare_regex(string comenzi)
 {
-    string sp0 = "[[:s:]]*";
-    string sp1 = "[[:s:]]+";
-    string w1 = "[[:w:]]+";
-    string d0 = "[[:d:]]*";
-    string d1 = "[[:d:]]+";
+    string sp0 = "\\s*";
+    string sp1 = "\\s+";
+    string w1 = "\\w+";
+    string d0 = "\\d*";
+    string d1 = "\\d+";
     string caracter = "(.*)";
-    //string nr_intreg = sp0 + d1 + sp0;
-    //string nr_real = sp0 + d1 + "\\." + d0 + sp0;
-    //string grup_cuvinte = "(" + sp0 + caracter + sp0 + ")+";
-    //string text = "'" + grup_cuvinte + "'";
-    //string valori = "((" + nr_intreg + ")|(" + nr_real + ")|(" + text + "))";
-	string valori = "(.*)";
 
     //create_table
 	string regex_create_1 =
@@ -769,23 +765,23 @@ void verificare_regex(string comenzi)
     string regex_display_table = sp0 + "Display" + sp1 + "Table" + sp1 + w1 + sp0;
 
     //insert into
-    string regex_valori_insert = "\\(" + sp0 + valori + sp0 + "(" + "," + sp0 + valori + sp0 + ")*" + sp0 + "\\)" + sp0;
+    string regex_valori_insert = "\\(" + sp0 + caracter + sp0 + "(" + "," + sp0 + caracter + sp0 + ")*" + sp0 + "\\)" + sp0;
     string regex_insert_into = sp0 + "insert" + sp1 + "into" + sp1 + w1 + sp1 + "values" + sp0 + regex_valori_insert;
 
     //delete from
-    string regex_delete_from = sp0 + "Delete" + sp1 + "from" + sp1 + w1 + sp1 + "where" + sp1 + w1 + sp0 + "=" + sp0 + valori + sp0;
+    string regex_delete_from = sp0 + "Delete" + sp1 + "from" + sp1 + w1 + sp1 + "where" + sp1 + w1 + sp0 + "=" + sp0 + caracter + sp0;
 
     //select
     string regex_select_all = sp0 + "select" + sp1 + "all" + sp1 + "from" + sp1 + w1 + sp0;
     string regex_select_all_where = regex_select_all + "(" + sp1 + "where" + sp1
-        + w1 + sp0 + "=" + sp0 + valori + sp0 + ")?" + sp0;
+        + w1 + sp0 + "=" + sp0 + caracter + sp0 + ")?" + sp0;
     string regex_nume_coloane = "\\(" + sp0 + w1 + sp0 + "(" + sp0 + "," + sp0 + w1 + sp0 + ")*" + sp0 + "\\)";
     string regex_select = sp0 + "select" + sp0 + regex_nume_coloane + sp0 + "from" + sp1 + w1 + sp0;
-    string regex_select_where = regex_select + "(" + sp1 + "where" + sp1 + w1 + sp0 + "=" + sp0 + valori + sp0 + ")?" + sp0;
+    string regex_select_where = regex_select + "(" + sp1 + "where" + sp1 + w1 + sp0 + "=" + sp0 + caracter + sp0 + ")?" + sp0;
 
     //update
     string regex_update = sp0 + "update" + sp1 + w1 + sp1 + "Set" + sp1 + w1 + sp0 + "=" +
-        sp0 + valori + sp1 + "where" + sp1 + w1 + sp0 + "=" + sp0 + valori + sp0;
+        sp0 + caracter + sp1 + "where" + sp1 + w1 + sp0 + "=" + sp0 + caracter + sp0;
 
     string* verifica_regex = new string[8];
     verifica_regex[0] = regex_create_table;
@@ -813,7 +809,7 @@ void verificare_regex(string comenzi)
 }
 
 //functia principala care executa comanda
-void executa_comanda(string comenzi, database &db)
+void executa_comanda(string comenzi, database &db,fisier_binar*&fbin,int& nr_fbin,fisier_txt &structura_tabele)
 {
 
     //verificare sintactica comenzi
@@ -881,7 +877,7 @@ void executa_comanda(string comenzi, database &db)
                 throw db_exception(mesaj_eroare.c_str());
             }
             //dimensiunea coloanei
-            sscanf(cuvinte[4 * index + 5].c_str(), "%d", &dimensiuni_coloane[index]);
+			int ignore = sscanf(cuvinte[4 * index + 5].c_str(), "%d", &dimensiuni_coloane[index]);
             //valoarea implicita a coloanei
             valori_implicite[index] = cuvinte[4 * index + 6];
             //afisare coloana la tastatura
@@ -898,6 +894,49 @@ void executa_comanda(string comenzi, database &db)
             if (i < nr_coloane - 1) cout << ", ";
         }
         cout << endl;
+		
+		string* append_tabel = new string[nr_coloane * 4 + 2];
+		append_tabel[0] = nume_tabel;
+		append_tabel[1] = to_string(nr_coloane);
+		int k = 2;
+		for (int i = 0;i < nr_coloane;i++)
+		{
+			append_tabel[k++] = nume_coloane[i];
+			if (tipuri_coloane[i] == text) append_tabel[k++] = "TEXT";
+			if (tipuri_coloane[i] == integer) append_tabel[k++] = "INTEGER";
+			if (tipuri_coloane[i] == real) append_tabel[k++] = "FLOAT";
+			append_tabel[k++] = to_string(dimensiuni_coloane[i]);
+			append_tabel[k++] = valori_implicite[i];
+		}
+		
+		string structura_fisier_binar = "";
+		for (int i = 0;i < nr_coloane;i++)
+		{
+			structura_fisier_binar += append_tabel[(i + 1) * 4 - 1];
+			structura_fisier_binar += " ";
+			structura_fisier_binar += append_tabel[(i + 1) * 4];
+			structura_fisier_binar += " ";
+		}
+		structura_fisier_binar.pop_back();
+		fisier_binar fisier(nume_tabel, structura_fisier_binar);
+		for (int i = 0;i < k;i++)
+		{
+			append_tabel[i] += ",";
+		}
+		append_tabel[k - 1].pop_back();
+		structura_tabele.scrie_text_append(append_tabel, nr_coloane * 4 + 2);
+
+		ofstream g(fisier.nume, ios::binary);
+		g.close();
+
+		fisier_binar* aux_bin = new fisier_binar[nr_fbin];
+		for (int i = 0;i < nr_fbin;i++) aux_bin[i] = fbin[i];
+		if (fbin) delete[]fbin;
+		fbin = new fisier_binar[nr_fbin + 1];
+		for (int i = 0;i < nr_fbin;i++) fbin[i] = aux_bin[i];
+		fbin[nr_fbin++] = fisier;
+		if (aux_bin)delete[]aux_bin;
+
     }
     //verificare daca comanda este de tip "Drop Table"
     else if (cuvinte[0] == "DROP" && cuvinte[1] == "TABLE")
@@ -907,6 +946,18 @@ void executa_comanda(string comenzi, database &db)
         //afisare mesaj aferent executarii comenzii
 		db.drop_table(nume_tabel);
 		cout << "Tabelul " + nume_tabel + " a fost sters" << endl;
+
+		int k = 0;
+		fisier_binar* aux_bin = new fisier_binar[nr_fbin];
+		for (int i = 0;i < nr_fbin;i++) aux_bin[i] = fbin[i];
+		if (fbin) delete[]fbin;
+		fbin = new fisier_binar[nr_fbin - 1];
+		for (int i = 0;i < nr_fbin;i++) 
+			if(aux_bin[i].nume!="_"+nume_tabel+".bin") fbin[k++] = aux_bin[i];
+		nr_fbin--;
+		if (aux_bin)delete[]aux_bin;
+		remove(("_" + nume_tabel + ".bin").c_str());
+		structura_tabele.scrie_text_sterge(nume_tabel);
     }
     //verificare daca comanda este de tip "Display Table"
     else if (cuvinte[0] == "DISPLAY" && cuvinte[1] == "TABLE")
@@ -931,6 +982,13 @@ void executa_comanda(string comenzi, database &db)
             valori[i] = cuvinte[i + 4];
 		db.insert_into(nume_tabel, valori, nr_cuvinte - 4);
         cout << "S-au introdus valorile in tabelul " << nume_tabel << endl;
+		for (int i = 0;i < nr_fbin;i++)
+		{
+			if (fbin[i].nume == "_" + nume_tabel + ".bin")
+			{
+				fbin[i].scrie_binar_append(valori, nr_cuvinte - 4);
+			}
+		}
     }
     //verificare daca comanda este de tip "Delete from"
     else if (cuvinte[0] == "DELETE" && cuvinte[1] == "FROM")
@@ -1012,8 +1070,332 @@ void executa_comanda(string comenzi, database &db)
         string nume_coloana = cuvinte[6];
         string valoare = cuvinte[7];
 		db.update(nume_tabel, nume_coloana, nume_coloana_set, valoare, valoare_set);
-        cout << "Valoarea din tabelul " << nume_tabel <<
-            " a fost modificata" << endl;
+		cout << "Valoarea din tabelul " << nume_tabel <<
+			" a fost modificata" << endl;
     }
     else throw db_exception("Aceasta comanda nu exista");
 }
+
+fisier_binar::fisier_binar()
+{
+	nume = "";
+	structura_tabel = "";
+}
+
+fisier_binar::fisier_binar(string nume, string structura)
+{
+	this->nume = "_" + nume + ".bin";
+	this->structura_tabel = structura;
+}
+
+string** fisier_binar::citeste_binar(int& nr_randuri)
+{
+	int nr_variabila_coloana = 0, nr_variabila_rand = 0;nr_randuri = 0;
+	int aux_int;float aux_float;string aux_string;
+	ifstream f(nume, ios::binary);
+
+	char* var_strtok = new char[structura_tabel.length() + 1];
+	strcpy_s(var_strtok, structura_tabel.length() + 1, structura_tabel.c_str());
+	string buffer[40];int k = 0;
+	string** randuri;
+	char* token = strtok(var_strtok, " ");
+	while (token)
+	{
+		buffer[k++] = string(token);
+		token = strtok(NULL, " ");
+	}
+	if (var_strtok) delete[]var_strtok;
+
+	while (true)
+	{
+		if (f.eof()) break;
+		for (int i = 0;i < k;i += 2)
+		{
+
+			if (buffer[i] == "TEXT")
+			{
+				int dimensiune;
+				int ignore = sscanf(buffer[i + 1].c_str(), "%d", &dimensiune);
+				f.read((char*)&aux_string[0], dimensiune);
+			}
+			if (buffer[i] == "INTEGER")
+			{
+				f.read((char*)&aux_int, sizeof(int));
+			}
+			if (buffer[i] == "FLOAT")
+			{
+				f.read((char*)&aux_float, sizeof(float));
+			}
+		}
+		nr_randuri++;
+	}
+	nr_randuri--;
+	f.close();f = ifstream(nume, ios::binary);
+	randuri = new string * [nr_randuri];
+	for (int i = 0;i < nr_randuri;i++)
+	{
+		randuri[i] = new string[k / 2];
+	}
+	while (nr_variabila_rand < nr_randuri)
+	{
+		nr_variabila_coloana = 0;
+		for (int i = 0;i < k;i += 2)
+		{
+			if (buffer[i] == "TEXT")
+			{
+				int dimensiune;
+				int ignore = sscanf(buffer[i + 1].c_str(), "%d", &dimensiune);
+				f.read((char*)&aux_string[0], dimensiune);
+				randuri[nr_variabila_rand][nr_variabila_coloana++] = aux_string;
+			}
+			if (buffer[i] == "INTEGER")
+			{
+				f.read((char*)&aux_int, sizeof(int));
+				randuri[nr_variabila_rand][nr_variabila_coloana++] = to_string(aux_int);
+			}
+			if (buffer[i] == "FLOAT")
+			{
+				f.read((char*)&aux_float, sizeof(float));
+				randuri[nr_variabila_rand][nr_variabila_coloana++] = to_string(aux_float);
+			}
+		}
+		nr_variabila_rand++;
+		if (f.eof()) break;
+	}
+	f.close();
+	return randuri;
+}
+
+void fisier_binar::scrie_binar_append(string* valori, int n)
+{
+	ofstream g(nume, ios::binary | ios::app);
+	int k = 0;
+	string* temp = new string[n * 2];
+	char* buffer = new char[structura_tabel.length() + 1];
+	strcpy_s(buffer, structura_tabel.length() + 1, structura_tabel.c_str());
+	char* token = strtok(buffer, " ");
+	while (token)
+	{
+		temp[k++] = string(token);
+		token = strtok(NULL, " ");
+	}
+	k = 0;
+	for (int i = 0;i < n;i++)
+	{
+		int aux;
+		int ignore = sscanf(temp[k + 1].c_str(), "%d", &aux);
+		if (temp[k] == "TEXT")
+		{
+			g.write((char*)&valori[i][0], aux);
+		}
+		if (temp[k] == "INTEGER")
+		{
+			int valoare_int;
+			ignore = sscanf(valori[i].c_str(), "%d", &valoare_int);
+			g.write((char*)&valoare_int, sizeof(int));
+		}
+		if (temp[k] == "FLOAT")
+		{
+			float valoare_float;
+			ignore = sscanf(valori[i].c_str(), "%f", &valoare_float);
+			g.write((char*)&valoare_float, sizeof(float));
+		}
+		k += 2;
+	}
+	g.close();
+}
+
+fisier_txt::fisier_txt(string nume)
+{
+	this->nume = nume;
+}
+
+void fisier_txt::scrie_text(string* valori, int nr_valori)
+{
+	ofstream f(nume);
+	for (int i = 0;i < nr_valori;i++)
+	{
+		f << valori[i];
+	}
+	f.close();
+}
+
+string** fisier_txt::citeste_text(int& nr_linii)
+{
+	ifstream f(nume);
+	char buffer[400];
+	nr_linii = 0;
+	int  i = 0, j = 0;
+	int test = f.peek();
+	if (!f.good())
+	{
+		f.close();
+		ofstream g(nume);
+		g.close();
+		return NULL;
+	}
+	while (true)
+	{
+		f.getline(buffer, 400);
+		nr_linii++;
+		if (f.eof()) break;
+	}
+	f.seekg(SEEK_SET);
+	string** sir = new string * [nr_linii];
+	for (int i = 0;i < nr_linii;i++)
+		sir[i] = new string[400];
+	for (int i = 0;i < nr_linii;i++)
+	{
+		f.getline(buffer, 400);
+		char* token = strtok(buffer, ",");
+		while (token)
+		{
+			sir[i][j++] = string(token);
+			token = strtok(NULL, ",");
+		}
+		if (f.eof()) break;
+		j = 0;
+	}
+	f.close();
+	return sir;
+}
+
+void fisier_txt::scrie_text_append(string* valori, int nr_valori)
+{
+	ofstream f(nume,ios::app);
+	for (int i = 0;i < nr_valori;i++)
+	{
+		f << valori[i];
+	}
+	f.close();
+}
+
+void fisier_txt::scrie_text_sterge(string n)
+{
+	ifstream f(nume);
+	if (!f.good()) throw db_exception("Nu exista fisierul");
+	ofstream g("temp.txt");
+	while (true)
+	{
+		char buffer[400];
+		f.getline(buffer,400);
+		char* copie = new char[strlen(buffer) + 1];
+		strcpy_s(copie, strlen(buffer) + 1, buffer);
+		char* token = strtok(buffer, ",");
+		if (string(token) != n) g << copie;
+		delete[]copie;
+		if (f.eof()) break;
+	}
+	f.close();
+	g.close();
+	remove(nume.c_str());
+	int r = rename("temp.txt", nume.c_str());
+}
+
+structura_fisiere::structura_fisiere()
+{
+	fbin = NULL;
+	ftext = NULL;
+	nr_fbin = 0;
+	nr_ftext = 0;
+}
+
+void structura_fisiere::executa_comenzi_initiale(int argc, char* argv[])
+{
+	int nr_tabele;
+	string** structura_tabele = this->structura_tabele.citeste_text(nr_tabele);
+
+	for (int i = 0;i < nr_tabele;i++)
+	{
+		string nume_tabel = structura_tabele[i][0];
+		int nr_coloane;
+		int ignore = sscanf(structura_tabele[i][1].c_str(), "%d", &nr_coloane);
+		string* nume_coloane = new string[nr_coloane];
+		tip* tipuri_coloane = new tip[nr_coloane];
+		int* dimensiune_coloane = new int[nr_coloane];
+		string* valoare_implicita = new string[nr_coloane];
+		int k = 0;
+		for (int j = 0;j < nr_coloane*4;j+=4)
+		{
+			nume_coloane[k] = structura_tabele[i][j + 2];
+			if (structura_tabele[i][j + 3] == "TEXT") tipuri_coloane[k] = text;
+			if (structura_tabele[i][j + 3] == "INTEGER") tipuri_coloane[k] = integer;
+			if (structura_tabele[i][j + 3] == "FLOAT") tipuri_coloane[k] = real;
+			ignore = sscanf(structura_tabele[i][j + 4].c_str(), "%d", &dimensiune_coloane[k]);
+			valoare_implicita[k] = structura_tabele[i][j + 5];
+			k++;
+		}
+
+		this->db.create_table(nume_tabel, nr_coloane, nume_coloane, tipuri_coloane, dimensiune_coloane, valoare_implicita);
+
+		string* append_tabel = new string[nr_coloane * 4 + 2];
+		append_tabel[0] = nume_tabel;
+		append_tabel[1] = to_string(nr_coloane);
+		k = 0;
+		for (int i = 0;i < nr_coloane;i++)
+		{
+			append_tabel[k++] = nume_coloane[i];
+			if (tipuri_coloane[i] == text) append_tabel[k++] = "TEXT";
+			if (tipuri_coloane[i] == integer) append_tabel[k++] = "INTEGER";
+			if (tipuri_coloane[i] == real) append_tabel[k++] = "FLOAT";
+			append_tabel[k++] = to_string(dimensiune_coloane[i]);
+			append_tabel[k++] = valoare_implicita[i];
+		}
+		append_tabel[k - 1].pop_back();
+
+		string structura_fisier_binar = "";
+
+		for (int i = 0;i < nr_coloane;i++)
+		{
+			structura_fisier_binar += append_tabel[i*4+1];
+			structura_fisier_binar += " ";
+			structura_fisier_binar += append_tabel[i*4+2];
+			structura_fisier_binar += " ";
+		}
+		structura_fisier_binar.pop_back();
+
+		fisier_binar* aux_bin = new fisier_binar[nr_fbin];
+		for (int i = 0;i < nr_fbin;i++) aux_bin[i] = this->fbin[i];
+		if (this->fbin) delete[]this->fbin;
+		this->fbin = new fisier_binar[nr_fbin + 1];
+		for (int i = 0;i < nr_fbin;i++) fbin[i] = aux_bin[i];
+		fbin[nr_fbin++] = fisier_binar(nume_tabel,structura_fisier_binar);
+		if (aux_bin)delete[]aux_bin;
+		cout << "A fost recuperat tabelul " << nume_tabel << " cu coloanele: ";
+		for (int i = 0;i < nr_coloane;i++)
+		{
+			cout << nume_coloane[i];
+			if (i < nr_coloane - 1) cout << ", ";
+		}
+		cout << endl;
+		int nr_randuri_citite;
+		string** valori_citite_fisier_binar = fbin[nr_fbin - 1].citeste_binar(nr_randuri_citite);
+		for (int i = 0;i < nr_randuri_citite;i++)
+		{
+			db.insert_into(nume_tabel, valori_citite_fisier_binar[i], nr_coloane);
+			cout << "S-au introdus valori in tabelul " << nume_tabel << endl;
+		}
+		
+	}
+
+	for (int i = 1;i < argc;i++)
+	{
+		int nr_comenzi;
+		ifstream f(argv[i]);
+		if (!f.good())
+		{
+			throw db_exception("Nu exista fisierul specificat ca argument");
+		}
+		while (true)
+		{
+			char buffer[400];
+			f.getline(buffer, 400);
+			string comenzi = string(buffer);
+			executa_comanda(comenzi, this->db,this->fbin,this->nr_fbin,this->structura_tabele);
+			if (f.eof()) break;
+		}
+		f.close();
+	}
+}
+
+
