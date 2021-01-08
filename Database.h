@@ -62,10 +62,10 @@ public:
 	table& operator=(const table& t);
 	~table();
 
-	void display_table();
+	void display_table(string nume_fisier);
 	void insert_into(string* valori);
 	void delete_from(string nume_coloana, string valoare);
-	void select(string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare);
+	void select(string nume_fisier, string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare);
 	void update(string nume_coloana, string nume_coloana_set, string valoare, string valoare_set);
 
 	row* delete_row(int index);
@@ -87,10 +87,10 @@ public:
 
 	void create_table(string nume_tabela, int nr_coloane, string* nume_coloane, tip* tipuri_coloane, int* dimensiune, string* valoare_implicita);
 	void drop_table(string nume_tabela);
-	void display_table(string nume_tabela);
+	void display_table(string nume_fisier, string nume_tabela);
 	void insert_into(string nume_tabela, string* valori, int nr_valori);
 	void delete_from(string nume_tabela, string nume_coloana, string valoare);
-	void select(string nume_tabela, string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare);
+	void select(string nume_fisier,string nume_tabela, string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare);
 	void update(string nume_tabela, string nume_coloana, string nume_coloana_set, string valoare, string valoare_set);
 
 	table* delete_table(int);
@@ -115,8 +115,8 @@ public:
 	fisier_binar(string, string);
 	string** citeste_binar(int&);
 	void scrie_binar_append(string*, int);
-	void scrie_binar_sterge(string);
-	void scrie_binar_inlocuire(string, string*, int);
+	void scrie_binar_sterge(string, int, int);
+	void scrie_binar_inlocuire(string, int, string, int, int);
 };
 
 class fisier_text
@@ -129,7 +129,9 @@ public:
 class fisier_txt:fisier_text
 {
 public:
+	fisier_txt();
 	fisier_txt(string);
+	fisier_txt& operator=(const fisier_txt&);
 	void scrie_text(string*, int);
 	string** citeste_text(int&) override;
 	void scrie_text_append(string*, int);
@@ -140,6 +142,8 @@ class fisier_csv :fisier_text
 {
 public:
 	int nr_coloane;
+	fisier_csv();
+	fisier_csv(string, int);
 	string** citeste_text(int&) override;
 };
 
@@ -154,6 +158,7 @@ public:
 	static fisier_txt structura_tabele;
 	structura_fisiere();
 	void executa_comenzi_initiale(int, char* []);
+	void executa_comanda(string);
 };
 
 //convertire string in uppercase
@@ -176,4 +181,4 @@ void numara_paranteze(string);
 void verificare_regex(string);
 
 //parser
-void executa_comanda(string, database&, fisier_binar*&, int&, fisier_txt&);
+//void executa_comanda(string, database&, fisier_binar*&, int&, fisier_txt*&, int&, fisier_txt&);

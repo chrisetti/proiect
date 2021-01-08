@@ -22,7 +22,7 @@ int main(int argc, char*argv[])
             auto t1 = chrono::high_resolution_clock::now();
             if (comenzi != "")
             {
-                executa_comanda(comenzi, str.db,str.fbin,str.nr_fbin,str.structura_tabele);
+                str.executa_comanda(comenzi);
                 auto t2 = chrono::high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
                 cout << "Comanda s-a executat in " << (float)duration / 1000000 << " secunde" << endl;

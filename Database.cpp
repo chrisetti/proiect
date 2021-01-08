@@ -319,8 +319,9 @@ row* table::delete_row(int index)
 	return aux;
 }
 
-void table::display_table()
+void table::display_table(string nume_fisier)
 {
+	ofstream out(nume_fisier);
 	cout << left;int lungime_maxima = 0;
 	for (int i = 0;i < this->nr_coloane;i++)
 	{
@@ -333,16 +334,20 @@ void table::display_table()
 	for (int i = 0; i < this->nr_coloane; i++)
 	{
 		cout << setw(lungime_maxima) << this->coloane[i].nume << "  |  ";
+		out << this->coloane[i].nume << ' ';
 	}
 	cout << endl;
+	out << endl;
 	cout << "-------------------------------------------------------------------------------------------------\n";
 	for (int i = 0; i < this->nr_randuri; i++)
 	{
 		for (int j = 0; j < this->nr_coloane; j++)
 		{
 			cout << setw(lungime_maxima) << this->randuri[i].valori_rand[j] << "  |  ";
+			out << this->randuri[i].valori_rand[j] << ' ';
 		}
 		cout << endl;
+		out << endl;
 		cout << "-------------------------------------------------------------------------------------------------\n";
 	}
 	if (nr_randuri == 1)
@@ -456,8 +461,9 @@ int table::find_column_index(string coloana_to_find)
 	throw db_exception("Aceasta coloana nu exista");
 }
 
-void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare)
+void table::select(string nume_fisier, string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare)
 {
+	ofstream out(nume_fisier);
 	cout << left;int lungime_maxima = 0;
 	for (int i = 0;i < this->nr_coloane;i++)
 	{
@@ -480,10 +486,15 @@ void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_col
 	{
 		for (int j = 0;j < nr_coloane;j++)
 		
-			if (this->coloane[j].nume == nume_coloane[i]) cout << setw(lungime_maxima) << nume_coloane[i] << "  |  ";
+			if (this->coloane[j].nume == nume_coloane[i])
+			{
+				cout << setw(lungime_maxima) << nume_coloane[i] << "  |  ";
+				out << nume_coloane[i] << ' ';
+			}
 		
 	}
 	cout << endl;
+	out << endl;
 
 	if (nume_coloana == "" && valoare == "")
 		verifica_where = 0;
@@ -510,9 +521,11 @@ void table::select(string* nume_coloane, int nr_coloane_afisare, string nume_col
 					{
 						int index = find_column_index(nume_coloane[n]);
 						cout << setw(lungime_maxima) << randuri[j].valori_rand[index] << "  |  ";
+						out << randuri[j].valori_rand[index] << ' ';
 						n++;
 					}
 					cout << endl;
+					out << endl;
 				}
 			}
 			cout << "--------------------------------------------------------------------------------------\n";
@@ -645,10 +658,10 @@ void database::drop_table(string nume_tabela)
 	nr_tabele--;
 }
 
-void database::display_table(string nume_tabela)
+void database::display_table(string nume_fisier, string nume_tabela)
 {
 	int index = find_index(nume_tabela);
-	tabele[index].display_table();
+	tabele[index].display_table(nume_fisier);
 }
 
 void database::insert_into(string nume_tabela, string* valori, int nr_valori)
@@ -667,10 +680,10 @@ void database::delete_from(string nume_tabela, string nume_coloana, string valoa
 	tabele[index].delete_from(nume_coloana, valoare);
 }
 
-void database::select(string nume_tabela, string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare)
+void database::select(string nume_fisier, string nume_tabela, string* nume_coloane, int nr_coloane_afisare, string nume_coloana, string valoare)
 {
 	int index = find_index(nume_tabela);
-	tabele[index].select(nume_coloane, nr_coloane_afisare, nume_coloana, valoare);
+	tabele[index].select(nume_fisier, nume_coloane, nr_coloane_afisare, nume_coloana, valoare);
 }
 
 void database::update(string nume_tabela, string nume_coloana, string nume_coloana_set, string valoare, string valoare_set)
@@ -783,7 +796,10 @@ void verificare_regex(string comenzi)
     string regex_update = sp0 + "update" + sp1 + w1 + sp1 + "Set" + sp1 + w1 + sp0 + "=" +
         sp0 + caracter + sp1 + "where" + sp1 + w1 + sp0 + "=" + sp0 + caracter + sp0;
 
-    string* verifica_regex = new string[8];
+	//import
+	string regex_import = sp0 + "import" + sp1 + w1 + sp1 + caracter + ".csv";
+
+    string* verifica_regex = new string[9];
     verifica_regex[0] = regex_create_table;
     verifica_regex[1] = regex_display_table;
     verifica_regex[2] = regex_insert_into;
@@ -792,12 +808,13 @@ void verificare_regex(string comenzi)
     verifica_regex[5] = regex_select_all_where;
     verifica_regex[6] = regex_select_where;
     verifica_regex[7] = regex_update;
+	verifica_regex[8] = regex_import;
 
     regex Regex;
     bool verifica = 0;int i = 0;
 
 
-    while (!verifica && i < 8)
+    while (!verifica && i < 9)
     {
         Regex = regex(verifica_regex[i], regex_constants::icase);
         verifica = regex_match(comenzi, Regex);
@@ -808,273 +825,7 @@ void verificare_regex(string comenzi)
 
 }
 
-//functia principala care executa comanda
-void executa_comanda(string comenzi, database &db,fisier_binar*&fbin,int& nr_fbin,fisier_txt &structura_tabele)
-{
 
-    //verificare sintactica comenzi
-    numara_paranteze(comenzi);
-    verificare_regex(comenzi);
-    //variabila folosita pentru tratarea erorilor
-    string mesaj_eroare;
-    //comanda primita de la tastatura va fi impartita
-    //pe baza separatorilor ,()=' si spatiu liber
-    //variabila cuvinte va retine lista de cuvinte 
-    //iar variabila nr_cuvinte numarul acestora
-    int nr_cuvinte = get_nr_cuvinte_string(comenzi);
-    string* cuvinte = impartire_comenzi_pe_cuvinte(comenzi);
-    capitalizare_comenzi(cuvinte, nr_cuvinte);
-    //afisare cuvinte pe randuri diferite
-
-    /*for (int i = 0;i < nr_cuvinte;i++)
-        cout << cuvinte[i] << endl;*/
-
-    if (nr_cuvinte <= 2) throw db_exception("Aceasta comanda nu exista");
-
-    //verificare daca comanda este de tip "Create Table"
-    if (cuvinte[0] == "CREATE" && cuvinte[1] == "TABLE")
-    {
-        //eleminare comanda redundanta "if not exists" daca este cazul
-
-        if (cuvinte[3] == "IF" && cuvinte[4] == "NOT" && cuvinte[5] == "EXISTS")
-        {
-            string* aux = new string[nr_cuvinte];
-            for (int i = 0;i < nr_cuvinte;i++) aux[i] = cuvinte[i];
-            delete[]cuvinte;
-            cuvinte = new string[nr_cuvinte - 3];
-            for (int i = 0;i < 3;i++) cuvinte[i] = aux[i];
-            for (int i = 6;i < nr_cuvinte;i++) cuvinte[i - 3] = aux[i];
-            delete[]aux;
-            nr_cuvinte -= 3;
-        }
-        //verificare daca tabelul are coloane
-        if (nr_cuvinte == 3)
-            throw db_exception("Fiecare tabel trebuie sa aiba cel putin o coloana");
-
-        //Numele tabelului
-        string nume_tabel = cuvinte[2];
-        //O coloana are obligatoriu 4 cuvinte care o definesc
-        if ((nr_cuvinte - 3) % 4 != 0) throw db_exception("Coloane nedeclarate corect");
-        int nr_coloane = (nr_cuvinte - 3) / 4;
-        //declararare siruri folosite pentru apelarea metodelor
-        string* nume_coloane = new string[nr_coloane];
-        tip* tipuri_coloane = new tip[nr_coloane];
-        int* dimensiuni_coloane = new int[nr_coloane];
-        string* valori_implicite = new string[nr_coloane];
-        //iterare prin lista de cuvinte
-        for (int index = 0;index < nr_coloane;index += 1)
-        {
-            //numele coloanei
-            nume_coloane[index] = cuvinte[4 * index + 3];
-            //tipul coloanei, care poate lua doar 3 valori
-            string tip_de_data = cuvinte[4 * index + 4];
-            if (tip_de_data == "INTEGER") tipuri_coloane[index] = integer;
-            else if (tip_de_data == "FLOAT") tipuri_coloane[index] = real;
-            else if (tip_de_data == "TEXT") tipuri_coloane[index] = text;
-            else
-            {
-                mesaj_eroare = "Tipul \"" + tip_de_data + "\" nu exista";
-                throw db_exception(mesaj_eroare.c_str());
-            }
-            //dimensiunea coloanei
-			int ignore = sscanf(cuvinte[4 * index + 5].c_str(), "%d", &dimensiuni_coloane[index]);
-            //valoarea implicita a coloanei
-            valori_implicite[index] = cuvinte[4 * index + 6];
-            //afisare coloana la tastatura
-            /*cout << nume_coloane[index] << ' ' << tipuri_coloane[index] << ' '
-                << dimensiuni_coloane[index] << ' ' << valoare_implicita[index] << endl;*/
-
-        }
-		db.create_table(nume_tabel, nr_coloane, nume_coloane, tipuri_coloane, dimensiuni_coloane, valori_implicite);
-        //afisare mesaj aferent executarii comenzii
-        cout << endl << "A fost creat tabelul " << nume_tabel << " cu coloanele: ";
-        for (int i = 0;i < nr_coloane;i++)
-        {
-            cout << nume_coloane[i];
-            if (i < nr_coloane - 1) cout << ", ";
-        }
-        cout << endl;
-		
-		string* append_tabel = new string[nr_coloane * 4 + 2];
-		append_tabel[0] = nume_tabel;
-		append_tabel[1] = to_string(nr_coloane);
-		int k = 2;
-		for (int i = 0;i < nr_coloane;i++)
-		{
-			append_tabel[k++] = nume_coloane[i];
-			if (tipuri_coloane[i] == text) append_tabel[k++] = "TEXT";
-			if (tipuri_coloane[i] == integer) append_tabel[k++] = "INTEGER";
-			if (tipuri_coloane[i] == real) append_tabel[k++] = "FLOAT";
-			append_tabel[k++] = to_string(dimensiuni_coloane[i]);
-			append_tabel[k++] = valori_implicite[i];
-		}
-		
-		string structura_fisier_binar = "";
-		for (int i = 0;i < nr_coloane;i++)
-		{
-			structura_fisier_binar += append_tabel[(i + 1) * 4 - 1];
-			structura_fisier_binar += " ";
-			structura_fisier_binar += append_tabel[(i + 1) * 4];
-			structura_fisier_binar += " ";
-		}
-		structura_fisier_binar.pop_back();
-		fisier_binar fisier(nume_tabel, structura_fisier_binar);
-		for (int i = 0;i < k;i++)
-		{
-			append_tabel[i] += ",";
-		}
-		append_tabel[k - 1].pop_back();
-		structura_tabele.scrie_text_append(append_tabel, nr_coloane * 4 + 2);
-
-		ofstream g(fisier.nume, ios::binary);
-		g.close();
-
-		fisier_binar* aux_bin = new fisier_binar[nr_fbin];
-		for (int i = 0;i < nr_fbin;i++) aux_bin[i] = fbin[i];
-		if (fbin) delete[]fbin;
-		fbin = new fisier_binar[nr_fbin + 1];
-		for (int i = 0;i < nr_fbin;i++) fbin[i] = aux_bin[i];
-		fbin[nr_fbin++] = fisier;
-		if (aux_bin)delete[]aux_bin;
-
-    }
-    //verificare daca comanda este de tip "Drop Table"
-    else if (cuvinte[0] == "DROP" && cuvinte[1] == "TABLE")
-    {
-        //Numele tabelului care trebuie sters
-        string nume_tabel = cuvinte[2];
-        //afisare mesaj aferent executarii comenzii
-		db.drop_table(nume_tabel);
-		cout << "Tabelul " + nume_tabel + " a fost sters" << endl;
-
-		int k = 0;
-		fisier_binar* aux_bin = new fisier_binar[nr_fbin];
-		for (int i = 0;i < nr_fbin;i++) aux_bin[i] = fbin[i];
-		if (fbin) delete[]fbin;
-		fbin = new fisier_binar[nr_fbin - 1];
-		for (int i = 0;i < nr_fbin;i++) 
-			if(aux_bin[i].nume!="_"+nume_tabel+".bin") fbin[k++] = aux_bin[i];
-		nr_fbin--;
-		if (aux_bin)delete[]aux_bin;
-		remove(("_" + nume_tabel + ".bin").c_str());
-		structura_tabele.scrie_text_sterge(nume_tabel);
-    }
-    //verificare daca comanda este de tip "Display Table"
-    else if (cuvinte[0] == "DISPLAY" && cuvinte[1] == "TABLE")
-    {
-        //Numele tabelului care trebuie afisat
-        string nume_tabel = cuvinte[2];
-        //afisare mesaj aferent executarii comenzii
-        
-		db.display_table(nume_tabel);
-		
-    }
-    //verificare daca comanda este de tip "Insert into"
-    else if (cuvinte[0] == "INSERT" && cuvinte[1] == "INTO")
-    {
-        if (nr_cuvinte == 3 || cuvinte[3] != "VALUES") throw db_exception("Lipseste cuvantul cheie \"VALUES\"");
-        if (nr_cuvinte == 4) throw db_exception("Nu s-au introdus valori");
-        //Numele tabelului
-        string nume_tabel = cuvinte[2];
-        //Valorile care trebuie introduse in tabel
-        string* valori = new string[nr_cuvinte - 4];
-        for (int i = 0;i < nr_cuvinte - 4;i++)
-            valori[i] = cuvinte[i + 4];
-		db.insert_into(nume_tabel, valori, nr_cuvinte - 4);
-        cout << "S-au introdus valorile in tabelul " << nume_tabel << endl;
-		for (int i = 0;i < nr_fbin;i++)
-		{
-			if (fbin[i].nume == "_" + nume_tabel + ".bin")
-			{
-				fbin[i].scrie_binar_append(valori, nr_cuvinte - 4);
-			}
-		}
-    }
-    //verificare daca comanda este de tip "Delete from"
-    else if (cuvinte[0] == "DELETE" && cuvinte[1] == "FROM")
-    {
-        if (nr_cuvinte == 3) throw db_exception("Lipseste cuvantul cheie \"WHERE\"");
-        if (nr_cuvinte == 4) throw db_exception("Lipseste numele coloanei");
-        if (nr_cuvinte == 5) throw db_exception("Lipseste valoarea coloanei");
-        string nume_tabel = cuvinte[2];
-        string nume_coloana = cuvinte[4];
-        string valoare = cuvinte[5];
-		db.delete_from(nume_tabel, nume_coloana, valoare);
-        //cout << "S-a sters randul cu valoarea " << valoare << endl;
-    }
-    //verificare daca comanda este de tip "Select"
-    else if (cuvinte[0] == "SELECT")
-    {
-        string nume_tabel;
-        int i = 1;
-        if (cuvinte[1] == "ALL")
-        {
-            if (nr_cuvinte != 4 && nr_cuvinte != 7) throw db_exception("Aceasta comanda nu exista");
-            if (nr_cuvinte == 3) throw db_exception("Lipseste numele tabelului");
-            if (cuvinte[2] != "FROM") throw db_exception("Lipseste cuvantul cheie \"FROM\"");
-            string* nume_coloane = new string[2];
-            nume_coloane[0] = "ALL";
-            nume_coloane[1] = "COLUMNS";
-            string nume_coloana = "";
-            string valoare = "";
-
-            nume_tabel = cuvinte[3];
-            if (nr_cuvinte == 7)
-                if (cuvinte[4] == "WHERE")
-                {
-                    nume_coloana = cuvinte[5];
-                    valoare = cuvinte[6];
-                }
-                else throw db_exception("Lipseste cuvantul cheie \"FROM\"");
-			db.select(nume_tabel, nume_coloane, 2, nume_coloana, valoare);
-
-        }
-        else if (cuvinte[i] == "FROM") throw db_exception("Lipsesc coloanele care trebuie selectate");
-        else
-        {
-            if (nr_cuvinte == 3) throw db_exception("Comanda invalida");
-            while (cuvinte[i] != "FROM")
-            {
-                if (cuvinte[i] == "")throw db_exception("Lipseste cuvantul cheie \"FROM\"");
-                i++;
-            }
-            string* nume_coloane = new string[i - 1];
-			int nr_coloane_afisare = i - 1;
-            for (int index = 0;index < i - 1;index++)
-                nume_coloane[index] = cuvinte[index + 1];
-            if (cuvinte[i + 1] == "") throw db_exception("Lipseste numele tabelului");
-            nume_tabel = cuvinte[i + 1];
-            string nume_coloana = "";
-            string valoare = "";
-            if (nr_cuvinte == i + 5)
-            {
-                if (cuvinte[i + 2] == "WHERE")
-                {
-                    nume_coloana = cuvinte[i + 3];
-                    valoare = cuvinte[i + 4];
-                }
-                else throw db_exception("Lipseste cuvantul cheie \"FROM\"");
-            }
-			db.select(nume_tabel, nume_coloane,nr_coloane_afisare, nume_coloana, valoare);
-        }
-    }
-    //verificare daca comanda este de tip "Update"
-    else if (cuvinte[0] == "UPDATE")
-    {
-        if (nr_cuvinte != 8) throw db_exception("Aceasta comanda nu exista");
-        if (cuvinte[2] != "SET") throw db_exception("Lipseste cuvantul cheie \"SET\"");
-        if (cuvinte[5] != "WHERE") throw db_exception("Lipseste cuvantul cheie \"WHERE\"");
-        string nume_tabel = cuvinte[1];
-        string nume_coloana_set = cuvinte[3];
-        string valoare_set = cuvinte[4];
-        string nume_coloana = cuvinte[6];
-        string valoare = cuvinte[7];
-		db.update(nume_tabel, nume_coloana, nume_coloana_set, valoare, valoare_set);
-		cout << "Valoarea din tabelul " << nume_tabel <<
-			" a fost modificata" << endl;
-    }
-    else throw db_exception("Aceasta comanda nu exista");
-}
 
 fisier_binar::fisier_binar()
 {
@@ -1205,9 +956,53 @@ void fisier_binar::scrie_binar_append(string* valori, int n)
 	g.close();
 }
 
+void fisier_binar::scrie_binar_sterge(string valoare, int camp, int nr_coloane)
+{
+	int nr_randuri;
+	fisier_binar temp("temp", this->structura_tabel);
+	string** valori = this->citeste_binar(nr_randuri);
+	for (int i = 0;i < nr_randuri;i++)
+	{
+		if (valori[i][camp] != valoare)
+		{
+			temp.scrie_binar_append(valori[i], nr_coloane);
+		}
+	}
+	remove(this->nume.c_str());
+	int ignore = rename(temp.nume.c_str(), this->nume.c_str());
+}
+
+void fisier_binar::scrie_binar_inlocuire(string valoare, int camp, string valoare_set, int camp_set, int nr_coloane)
+{
+	int nr_randuri;
+	fisier_binar temp("temp", this->structura_tabel);
+	string** valori = this->citeste_binar(nr_randuri);
+	for (int i = 0;i < nr_randuri;i++)
+	{
+		if (valori[i][camp] == valoare)
+		{
+			valori[i][camp_set] = valoare_set;
+		}
+		temp.scrie_binar_append(valori[i], nr_coloane);
+	}
+	remove(this->nume.c_str());
+	int ignore = rename(temp.nume.c_str(), this->nume.c_str());
+}
+
+fisier_txt::fisier_txt()
+{
+	nume = "";
+}
+
 fisier_txt::fisier_txt(string nume)
 {
 	this->nume = nume;
+}
+
+fisier_txt& fisier_txt::operator=(const fisier_txt& src)
+{
+	nume = src.nume;
+	return *this;
 }
 
 void fisier_txt::scrie_text(string* valori, int nr_valori)
@@ -1262,7 +1057,11 @@ string** fisier_txt::citeste_text(int& nr_linii)
 
 void fisier_txt::scrie_text_append(string* valori, int nr_valori)
 {
+	ifstream aux(nume);
+	bool fisier_gol = (aux.peek() == EOF);
+	aux.close();
 	ofstream f(nume,ios::app);
+	if(!fisier_gol) f << endl;
 	for (int i = 0;i < nr_valori;i++)
 	{
 		f << valori[i];
@@ -1290,6 +1089,63 @@ void fisier_txt::scrie_text_sterge(string n)
 	g.close();
 	remove(nume.c_str());
 	int r = rename("temp.txt", nume.c_str());
+}
+
+fisier_csv::fisier_csv()
+{
+	nr_coloane = 0;
+	nume = "";
+}
+
+fisier_csv::fisier_csv(string nume, int nr_coloane)
+{
+	this->nr_coloane = nr_coloane;
+	this->nume = nume;
+}
+
+string** fisier_csv::citeste_text(int& nr_elemente)
+{
+	ifstream f(nume);
+	if (!f.good())
+	{
+		throw db_exception("Fisierul nu exista");
+	}
+	string buffer;
+	getline(f, buffer);
+	if (!regex_match(buffer, regex("([.,\\d]*|'(.*)')*", regex_constants::icase)))
+	{
+		throw db_exception("Separatorul corect este ,");
+	}
+	for (int i = 0;i < buffer.size();i++)
+	{
+		if (buffer[i] == ',') nr_elemente++;
+	}
+	nr_elemente++;
+	if (nr_elemente % nr_coloane != 0)
+	{
+		throw db_exception("Numar gresit de elemente introdus");
+	}
+	nr_elemente /= nr_coloane;
+	string** rez = new string * [nr_elemente];
+	for (int i = 0;i < nr_elemente;i++)
+	{
+		rez[i] = new string[nr_coloane];
+	}
+	char* aux_char = new char[buffer.size() + 1];
+	strcpy_s(aux_char, buffer.size() + 1, buffer.c_str());
+	char* token = strtok(aux_char, ",");
+	int nr = 0, nc = 0;
+	while (token)
+	{
+		rez[nr][nc++] = token;
+		if (nc == nr_coloane)
+		{
+			nr++;
+			nc = 0;
+		}
+		token = strtok(NULL, ",");
+	}
+	return rez;
 }
 
 structura_fisiere::structura_fisiere()
@@ -1391,11 +1247,400 @@ void structura_fisiere::executa_comenzi_initiale(int argc, char* argv[])
 			char buffer[400];
 			f.getline(buffer, 400);
 			string comenzi = string(buffer);
-			executa_comanda(comenzi, this->db,this->fbin,this->nr_fbin,this->structura_tabele);
+			executa_comanda(comenzi);
 			if (f.eof()) break;
 		}
 		f.close();
 	}
 }
 
+//functia principala care executa comanda
+void structura_fisiere::executa_comanda(string comenzi)
+{
 
+	//verificare sintactica comenzi
+	numara_paranteze(comenzi);
+	verificare_regex(comenzi);
+	//variabila folosita pentru tratarea erorilor
+	string mesaj_eroare;
+	//comanda primita de la tastatura va fi impartita
+	//pe baza separatorilor ,()=' si spatiu liber
+	//variabila cuvinte va retine lista de cuvinte 
+	//iar variabila nr_cuvinte numarul acestora
+	int nr_cuvinte = get_nr_cuvinte_string(comenzi);
+	string* cuvinte = impartire_comenzi_pe_cuvinte(comenzi);
+	capitalizare_comenzi(cuvinte, nr_cuvinte);
+	//afisare cuvinte pe randuri diferite
+
+	/*for (int i = 0;i < nr_cuvinte;i++)
+		cout << cuvinte[i] << endl;*/
+
+	if (nr_cuvinte <= 2) throw db_exception("Aceasta comanda nu exista");
+
+	//verificare daca comanda este de tip "Create Table"
+	if (cuvinte[0] == "CREATE" && cuvinte[1] == "TABLE")
+	{
+		//eleminare comanda redundanta "if not exists" daca este cazul
+
+		if (cuvinte[3] == "IF" && cuvinte[4] == "NOT" && cuvinte[5] == "EXISTS")
+		{
+			string* aux = new string[nr_cuvinte];
+			for (int i = 0;i < nr_cuvinte;i++) aux[i] = cuvinte[i];
+			delete[]cuvinte;
+			cuvinte = new string[nr_cuvinte - 3];
+			for (int i = 0;i < 3;i++) cuvinte[i] = aux[i];
+			for (int i = 6;i < nr_cuvinte;i++) cuvinte[i - 3] = aux[i];
+			delete[]aux;
+			nr_cuvinte -= 3;
+		}
+		//verificare daca tabelul are coloane
+		if (nr_cuvinte == 3)
+			throw db_exception("Fiecare tabel trebuie sa aiba cel putin o coloana");
+
+		//Numele tabelului
+		string nume_tabel = cuvinte[2];
+		if (nume_tabel == "TEMP") throw db_exception("Numele tabelului nu poate fi 'temp'");
+		//O coloana are obligatoriu 4 cuvinte care o definesc
+		if ((nr_cuvinte - 3) % 4 != 0) throw db_exception("Coloane nedeclarate corect");
+		int nr_coloane = (nr_cuvinte - 3) / 4;
+		//declararare siruri folosite pentru apelarea metodelor
+		string* nume_coloane = new string[nr_coloane];
+		tip* tipuri_coloane = new tip[nr_coloane];
+		int* dimensiuni_coloane = new int[nr_coloane];
+		string* valori_implicite = new string[nr_coloane];
+		//iterare prin lista de cuvinte
+		for (int index = 0;index < nr_coloane;index += 1)
+		{
+			//numele coloanei
+			nume_coloane[index] = cuvinte[4 * index + 3];
+			//tipul coloanei, care poate lua doar 3 valori
+			string tip_de_data = cuvinte[4 * index + 4];
+			if (tip_de_data == "INTEGER") tipuri_coloane[index] = integer;
+			else if (tip_de_data == "FLOAT") tipuri_coloane[index] = real;
+			else if (tip_de_data == "TEXT") tipuri_coloane[index] = text;
+			else
+			{
+				mesaj_eroare = "Tipul \"" + tip_de_data + "\" nu exista";
+				throw db_exception(mesaj_eroare.c_str());
+			}
+			//dimensiunea coloanei
+			int ignore = sscanf(cuvinte[4 * index + 5].c_str(), "%d", &dimensiuni_coloane[index]);
+			//valoarea implicita a coloanei
+			valori_implicite[index] = cuvinte[4 * index + 6];
+			//afisare coloana la tastatura
+			/*cout << nume_coloane[index] << ' ' << tipuri_coloane[index] << ' '
+				<< dimensiuni_coloane[index] << ' ' << valoare_implicita[index] << endl;*/
+
+		}
+		db.create_table(nume_tabel, nr_coloane, nume_coloane, tipuri_coloane, dimensiuni_coloane, valori_implicite);
+		//afisare mesaj aferent executarii comenzii
+		cout << endl << "A fost creat tabelul " << nume_tabel << " cu coloanele: ";
+		for (int i = 0;i < nr_coloane;i++)
+		{
+			cout << nume_coloane[i];
+			if (i < nr_coloane - 1) cout << ", ";
+		}
+		cout << endl;
+
+		string* append_tabel = new string[nr_coloane * 4 + 2];
+		append_tabel[0] = nume_tabel;
+		append_tabel[1] = to_string(nr_coloane);
+		int k = 2;
+		for (int i = 0;i < nr_coloane;i++)
+		{
+			append_tabel[k++] = nume_coloane[i];
+			if (tipuri_coloane[i] == text) append_tabel[k++] = "TEXT";
+			if (tipuri_coloane[i] == integer) append_tabel[k++] = "INTEGER";
+			if (tipuri_coloane[i] == real) append_tabel[k++] = "FLOAT";
+			append_tabel[k++] = to_string(dimensiuni_coloane[i]);
+			append_tabel[k++] = valori_implicite[i];
+		}
+
+		string structura_fisier_binar = "";
+		for (int i = 0;i < nr_coloane;i++)
+		{
+			structura_fisier_binar += append_tabel[(i + 1) * 4 - 1];
+			structura_fisier_binar += " ";
+			structura_fisier_binar += append_tabel[(i + 1) * 4];
+			structura_fisier_binar += " ";
+		}
+		structura_fisier_binar.pop_back();
+		fisier_binar fisier(nume_tabel, structura_fisier_binar);
+		for (int i = 0;i < k;i++)
+		{
+			append_tabel[i] += ",";
+		}
+		append_tabel[k - 1].pop_back();
+		structura_tabele.scrie_text_append(append_tabel, nr_coloane * 4 + 2);
+
+		ofstream g(fisier.nume, ios::binary);
+		g.close();
+
+		fisier_binar* aux_bin = new fisier_binar[nr_fbin];
+		for (int i = 0;i < nr_fbin;i++) aux_bin[i] = fbin[i];
+		if (fbin) delete[]fbin;
+		fbin = new fisier_binar[nr_fbin + 1];
+		for (int i = 0;i < nr_fbin;i++) fbin[i] = aux_bin[i];
+		fbin[nr_fbin++] = fisier;
+		if (aux_bin)delete[]aux_bin;
+
+	}
+	//verificare daca comanda este de tip "Drop Table"
+	else if (cuvinte[0] == "DROP" && cuvinte[1] == "TABLE")
+	{
+		//Numele tabelului care trebuie sters
+		string nume_tabel = cuvinte[2];
+		//afisare mesaj aferent executarii comenzii
+		db.drop_table(nume_tabel);
+		cout << "Tabelul " + nume_tabel + " a fost sters" << endl;
+
+		int k = 0;
+		fisier_binar* aux_bin = new fisier_binar[nr_fbin];
+		for (int i = 0;i < nr_fbin;i++) aux_bin[i] = fbin[i];
+		if (fbin) delete[]fbin;
+		fbin = new fisier_binar[nr_fbin - 1];
+		for (int i = 0;i < nr_fbin;i++)
+			if (aux_bin[i].nume != "_" + nume_tabel + ".bin") fbin[k++] = aux_bin[i];
+		nr_fbin--;
+		if (aux_bin)delete[]aux_bin;
+		remove(("_" + nume_tabel + ".bin").c_str());
+		structura_tabele.scrie_text_sterge(nume_tabel);
+	}
+	//verificare daca comanda este de tip "Display Table"
+	else if (cuvinte[0] == "DISPLAY" && cuvinte[1] == "TABLE")
+	{
+		//Numele tabelului care trebuie afisat
+		string nume_tabel = cuvinte[2];
+
+
+		fisier_txt* aux = new fisier_txt[nr_ftext];
+		for (int i = 0;i < nr_ftext;i++)
+		{
+			aux[i] = ftext[i];
+		}
+		if (ftext)delete[]ftext;
+		ftext = new fisier_txt[nr_ftext + 1];
+		for (int i = 0;i < nr_ftext;i++)
+		{
+			ftext[i] = aux[i];
+		}
+		string nume_fisier = ".display_" + to_string(nr_ftext + 1) + ".txt";
+		ftext[nr_ftext++] = fisier_txt(nume_fisier);
+
+		//afisare mesaj aferent executarii comenzii
+		db.display_table(nume_fisier, nume_tabel);
+
+	}
+	//verificare daca comanda este de tip "Insert into"
+	else if (cuvinte[0] == "INSERT" && cuvinte[1] == "INTO")
+	{
+		if (nr_cuvinte == 3 || cuvinte[3] != "VALUES") throw db_exception("Lipseste cuvantul cheie \"VALUES\"");
+		if (nr_cuvinte == 4) throw db_exception("Nu s-au introdus valori");
+		//Numele tabelului
+		string nume_tabel = cuvinte[2];
+		//Valorile care trebuie introduse in tabel
+		string* valori = new string[nr_cuvinte - 4];
+		for (int i = 0;i < nr_cuvinte - 4;i++)
+			valori[i] = cuvinte[i + 4];
+		db.insert_into(nume_tabel, valori, nr_cuvinte - 4);
+		cout << "S-au introdus valorile in tabelul " << nume_tabel << endl;
+		for (int i = 0;i < nr_fbin;i++)
+		{
+			if (fbin[i].nume == "_" + nume_tabel + ".bin")
+			{
+				fbin[i].scrie_binar_append(valori, nr_cuvinte - 4);
+			}
+		}
+	}
+	//verificare daca comanda este de tip "Delete from"
+	else if (cuvinte[0] == "DELETE" && cuvinte[1] == "FROM")
+	{
+		if (nr_cuvinte == 3) throw db_exception("Lipseste cuvantul cheie \"WHERE\"");
+		if (nr_cuvinte == 4) throw db_exception("Lipseste numele coloanei");
+		if (nr_cuvinte == 5) throw db_exception("Lipseste valoarea coloanei");
+		string nume_tabel = cuvinte[2];
+		string nume_coloana = cuvinte[4];
+		string valoare = cuvinte[5];
+		db.delete_from(nume_tabel, nume_coloana, valoare);
+		int camp = -250;
+		int nr_coloane_sters = 0;
+		for (int i = 0;i < db.nr_tabele;i++)
+		{
+			for (int j = 0;j < db.tabele[i].nr_coloane;j++)
+			{
+				if (db.tabele[i].coloane[j].nume == nume_coloana && db.tabele[i].nume == nume_tabel)
+				{
+					camp = j;
+					nr_coloane_sters = db.tabele[i].nr_coloane;
+					if (db.tabele[i].coloane[j].Tip == real)
+					{
+						valoare = to_string(stof(valoare));
+					}
+					break;
+				}
+			}
+		}
+		for (int i = 0;i < nr_fbin;i++)
+		{
+			if (fbin[i].nume == "_" + nume_tabel + ".bin")
+			{
+				fbin[i].scrie_binar_sterge(valoare, camp, nr_coloane_sters);
+			}
+		}
+	}
+	//verificare daca comanda este de tip "Select"
+	else if (cuvinte[0] == "SELECT")
+	{
+		string nume_tabel;
+		fisier_txt* aux = new fisier_txt[nr_ftext];
+		for (int i = 0;i < nr_ftext;i++)
+		{
+			aux[i] = ftext[i];
+		}
+		if (ftext)delete[]ftext;
+		ftext = new fisier_txt[nr_ftext + 1];
+		for (int i = 0;i < nr_ftext;i++)
+		{
+			ftext[i] = aux[i];
+		}
+		string nume_fisier = ".select_" + to_string(nr_ftext + 1) + ".txt";
+		ftext[nr_ftext++] = fisier_txt(nume_fisier);
+		int i = 1;
+		if (cuvinte[1] == "ALL")
+		{
+			if (nr_cuvinte != 4 && nr_cuvinte != 7) throw db_exception("Aceasta comanda nu exista");
+			if (nr_cuvinte == 3) throw db_exception("Lipseste numele tabelului");
+			if (cuvinte[2] != "FROM") throw db_exception("Lipseste cuvantul cheie \"FROM\"");
+			string* nume_coloane = new string[2];
+			nume_coloane[0] = "ALL";
+			nume_coloane[1] = "COLUMNS";
+			string nume_coloana = "";
+			string valoare = "";
+
+			nume_tabel = cuvinte[3];
+			if (nr_cuvinte == 7)
+				if (cuvinte[4] == "WHERE")
+				{
+					nume_coloana = cuvinte[5];
+					valoare = cuvinte[6];
+				}
+				else throw db_exception("Lipseste cuvantul cheie \"FROM\"");
+
+
+			db.select(nume_fisier, nume_tabel, nume_coloane, 2, nume_coloana, valoare);
+
+		}
+		else if (cuvinte[i] == "FROM") throw db_exception("Lipsesc coloanele care trebuie selectate");
+		else
+		{
+			if (nr_cuvinte == 3) throw db_exception("Comanda invalida");
+			while (cuvinte[i] != "FROM")
+			{
+				if (cuvinte[i] == "")throw db_exception("Lipseste cuvantul cheie \"FROM\"");
+				i++;
+			}
+			string* nume_coloane = new string[i - 1];
+			int nr_coloane_afisare = i - 1;
+			for (int index = 0;index < i - 1;index++)
+				nume_coloane[index] = cuvinte[index + 1];
+			if (cuvinte[i + 1] == "") throw db_exception("Lipseste numele tabelului");
+			nume_tabel = cuvinte[i + 1];
+			string nume_coloana = "";
+			string valoare = "";
+			if (nr_cuvinte == i + 5)
+			{
+				if (cuvinte[i + 2] == "WHERE")
+				{
+					nume_coloana = cuvinte[i + 3];
+					valoare = cuvinte[i + 4];
+				}
+				else throw db_exception("Lipseste cuvantul cheie \"FROM\"");
+			}
+			db.select(nume_fisier, nume_tabel, nume_coloane, nr_coloane_afisare, nume_coloana, valoare);
+		}
+	}
+	//verificare daca comanda este de tip "Update"
+	else if (cuvinte[0] == "UPDATE")
+	{
+		if (nr_cuvinte != 8) throw db_exception("Aceasta comanda nu exista");
+		if (cuvinte[2] != "SET") throw db_exception("Lipseste cuvantul cheie \"SET\"");
+		if (cuvinte[5] != "WHERE") throw db_exception("Lipseste cuvantul cheie \"WHERE\"");
+		string nume_tabel = cuvinte[1];
+		string nume_coloana_set = cuvinte[3];
+		string valoare_set = cuvinte[4];
+		string nume_coloana = cuvinte[6];
+		string valoare = cuvinte[7];
+		db.update(nume_tabel, nume_coloana, nume_coloana_set, valoare, valoare_set);
+		cout << "Valoarea din tabelul " << nume_tabel <<
+			" a fost modificata" << endl;
+		int camp = -250, camp_set = -250;
+		int nr_coloane_sters = 0;
+		for (int i = 0;i < db.nr_tabele;i++)
+		{
+			for (int j = 0;j < db.tabele[i].nr_coloane;j++)
+			{
+				if (db.tabele[i].coloane[j].nume == nume_coloana && db.tabele[i].nume == nume_tabel)
+				{
+					camp = j;
+					nr_coloane_sters = db.tabele[i].nr_coloane;
+					if (db.tabele[i].coloane[j].Tip == real)
+					{
+						valoare = to_string(stof(valoare));
+					}
+				}
+				if (db.tabele[i].coloane[j].nume == nume_coloana_set && db.tabele[i].nume == nume_tabel)
+				{
+					camp_set = j;
+					if (db.tabele[i].coloane[j].Tip == real)
+					{
+						valoare_set = to_string(stof(valoare_set));
+					}
+				}
+			}
+		}
+		for (int i = 0;i < nr_fbin;i++)
+		{
+			if (fbin[i].nume == "_" + nume_tabel + ".bin")
+			{
+				fbin[i].scrie_binar_inlocuire(valoare, camp, valoare_set, camp_set, nr_coloane_sters);
+			}
+		}
+	}
+	else if (cuvinte[0] == "IMPORT")
+	{
+		if (nr_cuvinte != 3)
+		{
+			throw db_exception("Comanda import are obligatoriu 3 cuvinte");
+		}
+		int nr_coloane = 0;
+		for (int i = 0;i < db.nr_tabele;i++)
+		{
+			if (db.tabele[i].nume == cuvinte[1])
+			{
+				nr_coloane = db.tabele[i].nr_coloane;
+				break;
+			}
+		}
+		fisier_csv csv(cuvinte[2], nr_coloane);
+		int nr_elemente = 0;
+		string** valori_csv = csv.citeste_text(nr_elemente);
+
+		for (int i = 0;i < nr_elemente;i++)
+		{
+			for (int j = 0;j < nr_coloane;j++)
+			{
+				valori_csv[i][j].erase(remove(valori_csv[i][j].begin(), valori_csv[i][j].end(), '\''), valori_csv[i][j].end());
+			}
+			db.insert_into(cuvinte[1], valori_csv[i], nr_coloane);
+			cout << "S-au introdus valorile in tabelul " << cuvinte[1] << endl;
+			for (int k = 0;k < nr_fbin;k++)
+			{
+				if (fbin[k].nume == "_" + cuvinte[1] + ".bin")
+				{
+					fbin[k].scrie_binar_append(valori_csv[i], nr_coloane);
+				}
+			}
+		}
+	}
+	else throw db_exception("Aceasta comanda nu exista");
+}
