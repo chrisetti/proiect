@@ -649,8 +649,6 @@ void database::create_table(string nume_tabela, int nr_coloane, string* nume_col
 	
 }
 
-
-
 void database::drop_table(string nume_tabela)
 {
 	int index = find_index(nume_tabela);
@@ -1018,7 +1016,7 @@ void fisier_txt::scrie_text(string* valori, int nr_valori)
 string** fisier_txt::citeste_text(int& nr_linii)
 {
 	ifstream f(nume);
-	char buffer[400];
+	char buffer[500];
 	nr_linii = 0;
 	int  i = 0, j = 0;
 	int test = f.peek();
@@ -1031,17 +1029,17 @@ string** fisier_txt::citeste_text(int& nr_linii)
 	}
 	while (true)
 	{
-		f.getline(buffer, 400);
+		f.getline(buffer, 500);
 		nr_linii++;
 		if (f.eof()) break;
 	}
 	f.seekg(SEEK_SET);
 	string** sir = new string * [nr_linii];
 	for (int i = 0;i < nr_linii;i++)
-		sir[i] = new string[400];
+		sir[i] = new string[500];
 	for (int i = 0;i < nr_linii;i++)
 	{
-		f.getline(buffer, 400);
+		f.getline(buffer, 500);
 		char* token = strtok(buffer, ",");
 		while (token)
 		{
@@ -1074,14 +1072,20 @@ void fisier_txt::scrie_text_sterge(string n)
 	ifstream f(nume);
 	if (!f.good()) throw db_exception("Nu exista fisierul");
 	ofstream g("temp.txt");
+	bool fisier_gol = true;
 	while (true)
 	{
-		char buffer[400];
-		f.getline(buffer,400);
+		char buffer[500];
+		f.getline(buffer,500);
 		char* copie = new char[strlen(buffer) + 1];
 		strcpy_s(copie, strlen(buffer) + 1, buffer);
 		char* token = strtok(buffer, ",");
-		if (string(token) != n) g << copie;
+		if (string(token) != n)
+		{
+			if (!fisier_gol)g << endl;
+			g << copie;
+			fisier_gol = false;
+		}
 		delete[]copie;
 		if (f.eof()) break;
 	}

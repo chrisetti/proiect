@@ -13,7 +13,6 @@ int main(int argc, char*argv[])
         cout << endl << e.what() << endl << endl;
     }
     string comenzi;
-    //int x;string** rez = str.fbin[0].citeste_binar(x);
     while (true)
     {
         try
