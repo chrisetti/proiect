@@ -845,7 +845,7 @@ string** fisier_binar::citeste_binar(int& nr_randuri)
 
 	char* var_strtok = new char[structura_tabel.length() + 1];
 	strcpy_s(var_strtok, structura_tabel.length() + 1, structura_tabel.c_str());
-	string buffer[40];int k = 0;
+	string buffer[100];int k = 0;
 	string** randuri;
 	char* token = strtok(var_strtok, " ");
 	while (token)
@@ -864,8 +864,11 @@ string** fisier_binar::citeste_binar(int& nr_randuri)
 			if (buffer[i] == "TEXT")
 			{
 				int dimensiune;
-				int ignore = sscanf(buffer[i + 1].c_str(), "%d", &dimensiune);
-				f.read((char*)&aux_string[0], dimensiune);
+				//int ignore = sscanf(buffer[i + 1].c_str(), "%d", &dimensiune);
+				f.read((char*)&dimensiune, sizeof(dimensiune));
+				char buffer_citire[256];
+				f.read(buffer_citire, dimensiune);
+
 			}
 			if (buffer[i] == "INTEGER")
 			{
@@ -893,9 +896,11 @@ string** fisier_binar::citeste_binar(int& nr_randuri)
 			if (buffer[i] == "TEXT")
 			{
 				int dimensiune;
-				int ignore = sscanf(buffer[i + 1].c_str(), "%d", &dimensiune);
-				f.read((char*)&aux_string[0], dimensiune);
-				randuri[nr_variabila_rand][nr_variabila_coloana++] = aux_string;
+				//int ignore = sscanf(buffer[i + 1].c_str(), "%d", &dimensiune);
+				f.read((char*)&dimensiune, sizeof(dimensiune));
+				char buffer_citire[256];
+				f.read(buffer_citire, dimensiune);
+				randuri[nr_variabila_rand][nr_variabila_coloana++] = string(buffer_citire);
 			}
 			if (buffer[i] == "INTEGER")
 			{
@@ -935,7 +940,9 @@ void fisier_binar::scrie_binar_append(string* valori, int n)
 		int ignore = sscanf(temp[k + 1].c_str(), "%d", &aux);
 		if (temp[k] == "TEXT")
 		{
-			g.write((char*)&valori[i][0], aux);
+			int sz = valori[i].length() + 1;
+			g.write((char*)&sz, sizeof(sz));
+			g.write((char*)&valori[i][0], sz);
 		}
 		if (temp[k] == "INTEGER")
 		{
@@ -985,6 +992,11 @@ void fisier_binar::scrie_binar_inlocuire(string valoare, int camp, string valoar
 	}
 	remove(this->nume.c_str());
 	int ignore = rename(temp.nume.c_str(), this->nume.c_str());
+	if (ignore != 0)
+	{
+		ofstream err(this->nume, ios::binary);
+		err.close();
+	}
 }
 
 fisier_txt::fisier_txt()
@@ -1428,7 +1440,7 @@ void structura_fisiere::executa_comanda(string comenzi)
 		{
 			ftext[i] = aux[i];
 		}
-		string nume_fisier = ".display_" + to_string(nr_ftext + 1) + ".txt";
+		string nume_fisier = "display_" + to_string(nr_ftext + 1) + ".txt";
 		ftext[nr_ftext++] = fisier_txt(nume_fisier);
 
 		//afisare mesaj aferent executarii comenzii
@@ -1507,7 +1519,7 @@ void structura_fisiere::executa_comanda(string comenzi)
 		{
 			ftext[i] = aux[i];
 		}
-		string nume_fisier = ".select_" + to_string(nr_ftext + 1) + ".txt";
+		string nume_fisier = "select_" + to_string(nr_ftext + 1) + ".txt";
 		ftext[nr_ftext++] = fisier_txt(nume_fisier);
 		int i = 1;
 		if (cuvinte[1] == "ALL")
