@@ -330,7 +330,8 @@ void table::display_table(string nume_fisier)
 			lungime_maxima = this->coloane[i].dimensiune;
 		}
 	}
-	cout << "-------------------------------------------------------------------------------------------------\n";
+	if (lungime_maxima > 20) lungime_maxima = 20;
+	afisare_linii(lungime_maxima*(1+this->nr_coloane));
 	for (int i = 0; i < this->nr_coloane; i++)
 	{
 		cout << setw(lungime_maxima) << this->coloane[i].nume << "  |  ";
@@ -338,7 +339,7 @@ void table::display_table(string nume_fisier)
 	}
 	cout << endl;
 	out << endl;
-	cout << "-------------------------------------------------------------------------------------------------\n";
+	afisare_linii(lungime_maxima*(1+this->nr_coloane));
 	for (int i = 0; i < this->nr_randuri; i++)
 	{
 		for (int j = 0; j < this->nr_coloane; j++)
@@ -348,7 +349,7 @@ void table::display_table(string nume_fisier)
 		}
 		cout << endl;
 		out << endl;
-		cout << "-------------------------------------------------------------------------------------------------\n";
+		afisare_linii(lungime_maxima*(1+this->nr_coloane));
 	}
 	if (nr_randuri == 1)
 	{
@@ -472,6 +473,7 @@ void table::select(string nume_fisier, string* nume_coloane, int nr_coloane_afis
 			lungime_maxima = this->coloane[i].dimensiune;
 		}
 	}
+	if (lungime_maxima > 20) lungime_maxima = 20;
 	int ok_nume_coloana = 0; int nr_rows_returned = 0;bool verifica_where = 1;
 	if (nume_coloane[0] == "ALL" && nume_coloane[1] == "COLUMNS")
 	{
@@ -481,7 +483,7 @@ void table::select(string nume_fisier, string* nume_coloane, int nr_coloane_afis
 		for (int i = 0;i < nr_coloane_afisare;i++)
 			nume_coloane[i] = this->coloane[i].nume;
 	}
-	cout << "--------------------------------------------------------------------------------------\n";
+	afisare_linii(lungime_maxima*(1+this->nr_coloane));
 	for (int i = 0;i < nr_coloane_afisare;i++)
 	{
 		for (int j = 0;j < nr_coloane;j++)
@@ -516,7 +518,8 @@ void table::select(string nume_fisier, string* nume_coloane, int nr_coloane_afis
 				{
 					nr_rows_returned++;
 					int n = 0;
-					cout << "---------------------------------------------------------------------------------------" << endl;
+					afisare_linii(lungime_maxima*(1+this->nr_coloane));
+					cout << endl;
 					while (n < nr_coloane_afisare)
 					{
 						int index = find_column_index(nume_coloane[n]);
@@ -528,7 +531,7 @@ void table::select(string nume_fisier, string* nume_coloane, int nr_coloane_afis
 					out << endl;
 				}
 			}
-			cout << "--------------------------------------------------------------------------------------\n";
+			afisare_linii(lungime_maxima*(1+this->nr_coloane));
 			if (!verifica_where) i = nr_coloane;
 		}
 	}
@@ -824,7 +827,6 @@ void verificare_regex(string comenzi)
 }
 
 
-
 fisier_binar::fisier_binar()
 {
 	nume = "";
@@ -1015,7 +1017,7 @@ fisier_txt& fisier_txt::operator=(const fisier_txt& src)
 	return *this;
 }
 
-void fisier_txt::scrie_text(string* valori, int nr_valori)
+void fisier_txt::scrie_text(vector<string> valori, int nr_valori)
 {
 	ofstream f(nume);
 	for (int i = 0;i < nr_valori;i++)
@@ -1164,6 +1166,17 @@ string** fisier_csv::citeste_text(int& nr_elemente)
 	return rez;
 }
 
+void fisier_csv::scrie_text(vector<string> valori, int nr_valori)
+{
+	ofstream g(this->nume);
+	for (int i = 0;i < nr_valori;i++)
+	{
+		g << valori[i];
+		if (i != nr_valori - 1) g << ",";
+	}
+	g.close();
+}
+
 structura_fisiere::structura_fisiere()
 {
 	fbin = NULL;
@@ -1175,6 +1188,10 @@ structura_fisiere::structura_fisiere()
 void structura_fisiere::executa_comenzi_initiale(int argc, char* argv[])
 {
 	int nr_tabele;
+	if (argc > 6)
+	{
+		throw db_exception("Prea multe argumente pentru functia main");
+	}
 	string** structura_tabele = this->structura_tabele.citeste_text(nr_tabele);
 
 	for (int i = 0;i < nr_tabele;i++)
@@ -1659,4 +1676,84 @@ void structura_fisiere::executa_comanda(string comenzi)
 		}
 	}
 	else throw db_exception("Aceasta comanda nu exista");
+}
+
+void afisare_linii(int nr)
+{
+	for (int i = 0;i < nr;i++)
+	{
+		cout << "-";
+	}
+	cout << endl;
+}
+
+platitor_tva::platitor_tva()
+{
+	venituri = 0;
+}
+
+platitor_tva::platitor_tva(float venituri)
+{
+	this->venituri = venituri;
+}
+float platitor_tva::getVenituri()
+{
+	return this->venituri;
+}
+void platitor_tva::plateste_taxe()
+{
+	venituri -= calcul_tva();
+}
+persoana::persoana()
+{
+	nume = "";
+}
+persoana::persoana(string n, float venituri):platitor_tva(venituri)
+{
+	nume = n;
+}
+//float persoana::calcul_tva()
+//{
+//	return 0.24 * getVenituri();
+//}
+//float persoana::calcul_restanta(int nr_luni)
+//{
+//	return 0.24 * getVenituri() * 0.05 * nr_luni;
+//}
+persoana_fizica::persoana_fizica(string c, string n, float venituri):persoana(n,venituri)
+{
+	cnp = c;
+}
+float persoana_fizica::calcul_tva()
+{
+	return 0.24 * getVenituri();
+}
+float persoana_fizica::calcul_restanta(int nr_luni)
+{
+	return 0.24 * getVenituri() * 0.05 * nr_luni;
+}
+persoana_juridica::persoana_juridica(string c, string n, float venituri) :persoana(n, venituri)
+{
+	cui = c;
+}
+float persoana_juridica::calcul_tva()
+{
+	return 0.19 * getVenituri();
+}
+float persoana_juridica::calcul_restanta(int nr_luni)
+{
+	return 0.19 * getVenituri() * 0.1 * nr_luni;
+}
+firma::firma(string a, string c, float venituri) :platitor_tva(venituri)
+{
+	adresa = a;
+	cif = c;
+}
+float firma::calcul_tva()
+{
+	return 0.15 * getVenituri();
+}
+float firma::calcul_restanta(int nr_luni)
+{
+	return 0.15 * getVenituri() * 0.07 * nr_luni;
 }
