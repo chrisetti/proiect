@@ -331,7 +331,7 @@ void table::display_table(string nume_fisier)
 		}
 	}
 	if (lungime_maxima > 20) lungime_maxima = 20;
-	afisare_linii(lungime_maxima*(1+this->nr_coloane));
+	afisare_linii((5+lungime_maxima)*this->nr_coloane-2);
 	for (int i = 0; i < this->nr_coloane; i++)
 	{
 		cout << setw(lungime_maxima) << this->coloane[i].nume << "  |  ";
@@ -339,7 +339,7 @@ void table::display_table(string nume_fisier)
 	}
 	cout << endl;
 	out << endl;
-	afisare_linii(lungime_maxima*(1+this->nr_coloane));
+	afisare_linii((5+lungime_maxima)*this->nr_coloane-2);
 	for (int i = 0; i < this->nr_randuri; i++)
 	{
 		for (int j = 0; j < this->nr_coloane; j++)
@@ -349,7 +349,7 @@ void table::display_table(string nume_fisier)
 		}
 		cout << endl;
 		out << endl;
-		afisare_linii(lungime_maxima*(1+this->nr_coloane));
+		afisare_linii((5+lungime_maxima)*this->nr_coloane-2);
 	}
 	if (nr_randuri == 1)
 	{
@@ -483,7 +483,7 @@ void table::select(string nume_fisier, string* nume_coloane, int nr_coloane_afis
 		for (int i = 0;i < nr_coloane_afisare;i++)
 			nume_coloane[i] = this->coloane[i].nume;
 	}
-	afisare_linii(lungime_maxima*(1+this->nr_coloane));
+	afisare_linii((5+lungime_maxima)*nr_coloane_afisare-2);
 	for (int i = 0;i < nr_coloane_afisare;i++)
 	{
 		for (int j = 0;j < nr_coloane;j++)
@@ -518,8 +518,7 @@ void table::select(string nume_fisier, string* nume_coloane, int nr_coloane_afis
 				{
 					nr_rows_returned++;
 					int n = 0;
-					afisare_linii(lungime_maxima*(1+this->nr_coloane));
-					cout << endl;
+					afisare_linii((5+lungime_maxima)* nr_coloane_afisare -2);
 					while (n < nr_coloane_afisare)
 					{
 						int index = find_column_index(nume_coloane[n]);
@@ -531,7 +530,7 @@ void table::select(string nume_fisier, string* nume_coloane, int nr_coloane_afis
 					out << endl;
 				}
 			}
-			afisare_linii(lungime_maxima*(1+this->nr_coloane));
+			afisare_linii((5+lungime_maxima)* nr_coloane_afisare -2);
 			if (!verifica_where) i = nr_coloane;
 		}
 	}
