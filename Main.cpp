@@ -7,23 +7,13 @@ int main(int argc, char*argv[])
     try
     {
         str.executa_comenzi_initiale(argc, argv);
+        str.plateste_taxe();
     }
     catch (db_exception e)
     {
         cout << endl << e.what() << endl << endl;
     }
     string comenzi;
-    //test
-    
-    persoana_fizica p1("", "Ronaldo", 5000);
-    persoana_juridica p2("123", "Becali", 5000);
-    firma f("strada gladiolelor 45", "Dove", 5000);
-    platitor_tva* pv[] = { &p1,&p2,&f };
-    cout << pv[0]->calcul_tva() << ' ' << pv[0]->calcul_restanta(6) << endl;
-    cout << pv[1]->calcul_tva() << ' ' << pv[1]->calcul_restanta(6) << endl;
-    cout << pv[2]->calcul_tva() << ' ' << pv[2]->calcul_restanta(6) << endl;
-
-    //test
     while (true)
     {
         try

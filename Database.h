@@ -6,6 +6,9 @@
 #include <chrono>
 #include <iomanip>
 #include <vector>
+#include <set>
+#include <map>
+#include <list>
 using namespace std;
 //enumerarea pentru tipurile posibile de data
 //integer are valoarea 0, real 1 si text 2
@@ -26,11 +29,28 @@ private:
 	int dimensiune;
 	tip Tip;
 	string valoare_implicita;
+	
 
 public:
 	column();
 	column(string nume, int dimensiune, tip Tip, string valoare_implicita);
-
+	//setteri si getteri
+	void setNume(string nume);
+	string getNume();
+	void setDimensiune(int dimensiune);
+	int getDimensiune();
+	void setTip(tip Tip);
+	tip getTip();
+	void setValoareImplicita(string valoare_implicita);
+	string getValoareImplicita();
+	//supraincarcarea operatorilor
+	column operator+(string s);
+	column operator++(int i);
+	column operator++();
+	explicit operator int();
+	bool operator!();
+	bool operator<=(column c);
+	bool operator==(column c);
 };
 
 class row
@@ -47,8 +67,22 @@ public:
 	row(const row& r);
 	row& operator=(const row& r);
 	~row();
-};
+	//setteri si getteri 
+	void setValoriRand(string* valori, int nr_coloane);
+	string* getValoriRand();
+	void setNrColoane(int nr_coloane);
+	int getNrColoane();
 
+	//supraincarcarea operatorilor
+	string& operator[](int index);
+	row operator++(int i);
+	row operator++();
+	explicit operator int();
+	bool operator!();
+	bool operator<(row r);
+	bool operator== (row r);
+};
+bool operator<(const row&, const row&);
 class table
 {
 private:
@@ -75,7 +109,27 @@ public:
 
 	row* delete_row(int index);
 	int find_column_index(string coloana_to_find);
+	//setteri si getteri
+	void setNume(string nume);
+	string getNume();
+	void setNrColoane(int nr_coloane);
+	int getNrColoane();
+	void setNrRanduri(int nr_randuri);
+	int getNrRanduri();
+	void setColoane(column* coloane, int nr_coloane);
+	column* getColoane();
+	void setRanduri(row* randuri, int nr_randuri);
+	row* getRanduri();
 
+
+	//supraincarcarea operatorilor
+	column& operator[](int index);
+	table operator+(string s);
+	table operator++(int i);
+	table operator++();
+	explicit operator string();
+	bool operator!();
+	bool operator<=(table t);
 };
 
 class database
@@ -103,6 +157,21 @@ public:
 
 	table* delete_table(int);
 	int find_index(string);
+
+	//setteri si getteri
+	void setTabele(table* tabele, int nr_tabele);
+	table* getTabele();
+	void setNrTabele(int nr_tabele);
+	int getNrTabele();
+
+	//supraincarcarea operatorilor
+	table& operator[](int index);
+	explicit operator int();
+	bool operator!();
+	database operator++();
+	database operator++(int i);
+	bool operator<=(database db);
+	bool operator==(database db);
 };
 
 //clasa care se va ocupa de erori
@@ -178,6 +247,7 @@ public:
 	structura_fisiere();
 	void executa_comenzi_initiale(int, char* []);
 	void executa_comanda(string);
+	void plateste_taxe();
 };
 
 class platitor_tva

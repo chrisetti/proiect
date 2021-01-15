@@ -20,7 +20,85 @@ column::column(string nume, int dimensiune, tip Tip, string valoare_implicita)
 	this->Tip = Tip;
 	this->valoare_implicita = valoare_implicita;
 }
+int column::getDimensiune()
+{
+	return this->dimensiune;
+}
 
+void column::setTip(tip Tip)
+{
+	this->Tip = Tip;
+}
+
+tip column::getTip()
+{
+	return this->Tip;
+}
+
+void column::setNume(string nume)
+{
+	this->nume = nume;
+}
+
+string column::getNume()
+{
+	return this->nume;
+}
+
+void column::setDimensiune(int dimensiune)
+{
+	this->dimensiune = dimensiune;
+}
+
+void column::setValoareImplicita(string valoare_implicita)
+{
+	this->valoare_implicita = valoare_implicita;
+}
+
+string column::getValoareImplicita()
+{
+	return this->valoare_implicita;
+}
+
+column column::operator+(string s)
+{
+	this->nume = this->nume + s;
+	return *this;
+}
+
+column column::operator++()
+{
+	this->dimensiune++;
+	return *this;
+}
+
+column column::operator++(int i)
+{
+	column copie = *this;
+	this->dimensiune++;
+	return copie;
+}
+
+column::operator int()
+{
+	return this->dimensiune;
+}
+
+bool column::operator!()
+{
+	return this->dimensiune > 0;
+}
+
+bool column::operator<= (column c)
+{
+	return this->dimensiune <= c.getDimensiune();
+}
+
+bool column::operator==(column c)
+{
+
+	return (this->nume == c.getNume()) && (this->dimensiune == c.getDimensiune()) && (this->Tip == c.getTip()) && (this->valoare_implicita == c.getValoareImplicita());
+}
 row::row()
 {
 	valori_rand = nullptr;
@@ -91,6 +169,153 @@ row::~row()
 	{
 		delete[] valori_rand;
 	}
+}
+
+void row::setValoriRand(string* valori, int nr_coloane)
+{
+	if (valori != nullptr && nr_coloane != 0)
+	{
+		for (int i = 0; i < nr_coloane; i++)
+		{
+			this->valori_rand = valori;
+		}
+	}
+}
+
+string* row::getValoriRand()
+{
+	return this->valori_rand;
+}
+
+void row::setNrColoane(int nr_coloane)
+{
+	this->nr_coloane = nr_coloane;
+}
+
+int row::getNrColoane()
+{
+	return this->nr_coloane;
+}
+
+void table::setNume(string nume)
+{
+	this->nume = nume;
+}
+
+string table::getNume()
+{
+	return this->nume;
+}
+
+void table::setNrColoane(int nr_coloane)
+{
+	this->nr_coloane = nr_coloane;
+}
+
+int table::getNrColoane()
+{
+	return this->nr_coloane;
+}
+
+void table::setNrRanduri(int nr_randuri)
+{
+	this->nr_randuri = nr_randuri;
+}
+
+int table::getNrRanduri()
+{
+	return this->nr_randuri;
+}
+
+void table::setColoane(column* coloane, int nr_coloane)
+{
+	if (coloane != nullptr && nr_coloane > 0)
+	{
+		for (int i = 0; i < nr_coloane; i++)
+		{
+			this->coloane[i] = coloane[i];
+		}
+	}
+}
+
+column* table::getColoane()
+{
+	return this->coloane;
+}
+
+void table::setRanduri(row* randuri, int nr_randuri)
+{
+	if (randuri != nullptr && nr_randuri > 0)
+	{
+		for (int i = 0; i < nr_randuri; i++)
+		{
+			this->randuri[i] = randuri[i];
+		}
+	}
+}
+
+row* table::getRanduri()
+{
+	return this->randuri;
+}
+
+
+string& row::operator[](int index)
+{
+	if (index >= 0 && index < nr_coloane)
+	{
+		return valori_rand[index];
+	}
+	throw db_exception("Index invalid.");
+
+}
+
+row row::operator++()
+{
+	this->nr_coloane++;
+	return *this;
+}
+
+row row::operator++(int i)
+{
+	row copie = *this;
+	this->nr_coloane++;
+	return copie;
+}
+
+row::operator int()
+{
+	return this->nr_coloane;
+}
+
+bool row::operator!()
+{
+	return this->nr_coloane > 0;
+}
+
+bool row::operator<(row r)
+{
+	return this->nr_coloane < r.nr_coloane;
+}
+bool operator<(const row& r1, const row& r2)
+{
+	return true;
+}
+
+bool row::operator==(row r)
+{
+	if (this->nr_coloane != r.nr_coloane)
+	{
+		return false;
+	}
+	for (int i = 0; i < this->nr_coloane; i++)
+	{
+		if (this->valori_rand[i] != r.valori_rand[i])
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 table::table()
@@ -221,6 +446,121 @@ table::~table()
 	}
 }
 
+column& table:: operator[](int index)
+{
+	if (index >= 0 && index < nr_coloane)
+	{
+		return coloane[index];
+	}
+	throw exception("index invalid");
+}
+
+table table::operator+(string s)
+{
+	this->nume = this->nume + s;
+	return *this;
+}
+
+table table::operator++(int i)
+{
+	table copie = *this;
+	this->nr_coloane++;
+	return copie;
+}
+
+table table::operator++()
+{
+	this->nr_coloane++;
+	return *this;
+}
+
+table::operator string()
+{
+	return this->nume;
+}
+
+bool table::operator!()
+{
+	return this->nr_randuri > 0;
+}
+
+bool table::operator<= (table t)
+{
+	return this->nr_randuri <= t.nr_randuri;
+}
+table& database::operator[](int index)
+{
+	if (index >= 0 && index < nr_tabele)
+	{
+		return tabele[index];
+	}
+}
+
+database::operator int()
+{
+	return nr_tabele > 0;
+}
+
+bool database::operator!()
+{
+	return this->nr_tabele;
+}
+
+database database::operator++()
+{
+	this->nr_tabele++;
+	return *this;
+}
+
+database database::operator++(int i)
+{
+	database copie = *this;
+	this->nr_tabele++;
+	return copie;
+}
+
+bool database::operator<=(database db)
+{
+	return this->nr_tabele <= db.nr_tabele;
+}
+
+bool database::operator==(database db)
+{
+	if (this->nr_tabele != db.nr_tabele)
+	{
+		return false;
+	}
+	return true;
+}
+
+void database::setTabele(table* tabele, int nr_tabele)
+{
+	if (tabele != nullptr && nr_tabele != 0)
+	{
+		for (int i = 0; i < nr_tabele; i++)
+		{
+			this->tabele[i] = tabele[i];
+		}
+	}
+}
+
+table* database::getTabele()
+{
+	return this->tabele;
+}
+
+void database::setNrTabele(int nr_tabele)
+{
+	if (nr_tabele != 0)
+	{
+		this->nr_tabele;
+	}
+}
+
+int database::getNrTabele()
+{
+	return this->nr_tabele;
+}
 database::database()
 {
 	column* coloane = new column[1];
@@ -865,7 +1205,6 @@ string** fisier_binar::citeste_binar(int& nr_randuri)
 			if (buffer[i] == "TEXT")
 			{
 				int dimensiune;
-				//int ignore = sscanf(buffer[i + 1].c_str(), "%d", &dimensiune);
 				f.read((char*)&dimensiune, sizeof(dimensiune));
 				char buffer_citire[256];
 				f.read(buffer_citire, dimensiune);
@@ -897,7 +1236,6 @@ string** fisier_binar::citeste_binar(int& nr_randuri)
 			if (buffer[i] == "TEXT")
 			{
 				int dimensiune;
-				//int ignore = sscanf(buffer[i + 1].c_str(), "%d", &dimensiune);
 				f.read((char*)&dimensiune, sizeof(dimensiune));
 				char buffer_citire[256];
 				f.read(buffer_citire, dimensiune);
@@ -1302,10 +1640,6 @@ void structura_fisiere::executa_comanda(string comenzi)
 	int nr_cuvinte = get_nr_cuvinte_string(comenzi);
 	string* cuvinte = impartire_comenzi_pe_cuvinte(comenzi);
 	capitalizare_comenzi(cuvinte, nr_cuvinte);
-	//afisare cuvinte pe randuri diferite
-
-	/*for (int i = 0;i < nr_cuvinte;i++)
-		cout << cuvinte[i] << endl;*/
 
 	if (nr_cuvinte <= 2) throw db_exception("Aceasta comanda nu exista");
 
@@ -1359,9 +1693,6 @@ void structura_fisiere::executa_comanda(string comenzi)
 			int ignore = sscanf(cuvinte[4 * index + 5].c_str(), "%d", &dimensiuni_coloane[index]);
 			//valoarea implicita a coloanei
 			valori_implicite[index] = cuvinte[4 * index + 6];
-			//afisare coloana la tastatura
-			/*cout << nume_coloane[index] << ' ' << tipuri_coloane[index] << ' '
-				<< dimensiuni_coloane[index] << ' ' << valoare_implicita[index] << endl;*/
 
 		}
 		db.create_table(nume_tabel, nr_coloane, nume_coloane, tipuri_coloane, dimensiuni_coloane, valori_implicite);
@@ -1677,6 +2008,55 @@ void structura_fisiere::executa_comanda(string comenzi)
 	else throw db_exception("Aceasta comanda nu exista");
 }
 
+void structura_fisiere::plateste_taxe()
+{
+	int poz = -1;
+	for (int i = 0;i < db.nr_tabele;i++)
+	{
+		if (db.tabele[i].nume == "PLATITORI_TVA" &&
+			db.tabele[i].nr_coloane==3&&
+			db.tabele[i].coloane[0].nume=="NUME"&&
+			db.tabele[i].coloane[1].nume == "TIP"&&
+			db.tabele[i].coloane[2].nume == "VENITURI") poz = i;
+	}
+	if (poz >= 0)
+	{
+		table tabel = db.tabele[poz];
+		list<row>l;
+		for (int i = 0;i < tabel.nr_randuri;i++)
+		{
+			l.push_back(tabel.randuri[i]);
+		}
+		vector<platitor_tva*>v;
+		for (list<row>::iterator it = l.begin();it != l.end();it++)
+		{
+			if (it->valori_rand[1] == "FIRMA")
+			{
+				firma aux = firma(it->valori_rand[0], it->valori_rand[1], stof(it->valori_rand[2]));
+				v.push_back(&aux);
+			}
+			if (it->valori_rand[1] == "PERSOANA JURIDICA")
+			{
+				persoana_juridica aux = persoana_juridica(it->valori_rand[0], it->valori_rand[1], stof(it->valori_rand[2]));
+				v.push_back(&aux);
+			}
+			if (it->valori_rand[1] == "PERSOANA FIZICA")
+			{
+				persoana_fizica aux = persoana_fizica(it->valori_rand[0], it->valori_rand[1], stof(it->valori_rand[2]));
+				v.push_back(&aux);
+			}
+		}
+		for (int i = 0;i < v.size();i++)
+		{
+			int nrZile;
+			cout << "Introduceti numarul de luni intarziate de entitatea " << tabel.randuri[i].valori_rand[0] << " este : ";
+			cin >> nrZile;
+			cout << "Entitatea " << tabel.randuri[i].valori_rand[0] << " are de plata " <<
+				v[i]->calcul_tva() + v[i]->calcul_restanta(nrZile) << endl;
+		}
+	}
+}
+
 void afisare_linii(int nr)
 {
 	for (int i = 0;i < nr;i++)
@@ -1711,14 +2091,7 @@ persoana::persoana(string n, float venituri):platitor_tva(venituri)
 {
 	nume = n;
 }
-//float persoana::calcul_tva()
-//{
-//	return 0.24 * getVenituri();
-//}
-//float persoana::calcul_restanta(int nr_luni)
-//{
-//	return 0.24 * getVenituri() * 0.05 * nr_luni;
-//}
+
 persoana_fizica::persoana_fizica(string c, string n, float venituri):persoana(n,venituri)
 {
 	cnp = c;
@@ -1756,3 +2129,4 @@ float firma::calcul_restanta(int nr_luni)
 {
 	return 0.15 * getVenituri() * 0.07 * nr_luni;
 }
+
