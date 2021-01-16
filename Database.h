@@ -244,6 +244,8 @@ private:
 	database db;
 	static fisier_txt structura_tabele;
 public:
+	static string gandalf;
+	static string gandalf_db;
 	structura_fisiere();
 	void executa_comenzi_initiale(int, char* []);
 	void executa_comanda(string);

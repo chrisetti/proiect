@@ -3,6 +3,11 @@ structura_fisiere str;
 fisier_txt structura_fisiere::structura_tabele = fisier_txt("__Structura_tabele.txt");
 int main(int argc, char*argv[])
 {
+    system("color 02");
+    cout << str.gandalf << endl;
+    cout << str.gandalf_db << endl;
+    cin.get();
+    system("cls");
     system("color 9f");
     try
     {
